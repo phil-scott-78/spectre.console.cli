@@ -65,7 +65,7 @@ internal static class CommandValueResolver
                 {
                     if (mapped.Parameter.IsFlagValue() && mapped.Value == null)
                     {
-                        if (mapped.Parameter is CommandOption option && option.DefaultValue != null)
+                        if (mapped.Parameter is CommandOption { DefaultValue: not null } option)
                         {
                             // Set the default value.
                             binder.Bind(mapped.Parameter, resolver, option.DefaultValue?.Value);
@@ -216,13 +216,14 @@ internal static class CommandValueResolver
             }
             catch (NotSupportedException)
             {
-                var constructor = Type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new[] { input.GetType() }, null);
+                var constructor = Type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, [input.GetType()
+                ], null);
                 if (constructor == null)
                 {
                     throw;
                 }
 
-                return constructor.Invoke(new[] { input });
+                return constructor.Invoke([input]);
             }
         }
     }

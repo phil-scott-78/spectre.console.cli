@@ -14,7 +14,7 @@ public abstract class Command<TSettings> : ICommand<TSettings>
     /// <param name="context">The command context.</param>
     /// <param name="settings">The settings.</param>
     /// <returns>The validation result.</returns>
-    public virtual ValidationResult Validate(CommandContext context, TSettings settings)
+    protected virtual ValidationResult Validate(CommandContext context, TSettings settings)
     {
         return ValidationResult.Success();
     }
@@ -25,8 +25,8 @@ public abstract class Command<TSettings> : ICommand<TSettings>
     /// <param name="context">The command context.</param>
     /// <param name="settings">The settings.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to abort the command.</param>
-    /// <returns>An integer indicating whether or not the command executed successfully.</returns>
-    public abstract int Execute(CommandContext context, TSettings settings, CancellationToken cancellationToken);
+    /// <returns>An integer indicating whether the command executed successfully.</returns>
+    protected abstract int Execute(CommandContext context, TSettings settings, CancellationToken cancellationToken);
 
     /// <inheritdoc/>
     ValidationResult ICommand.Validate(CommandContext context, CommandSettings settings)

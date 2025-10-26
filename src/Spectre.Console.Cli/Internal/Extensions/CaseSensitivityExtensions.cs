@@ -4,11 +4,8 @@ internal static class CaseSensitivityExtensions
 {
     public static StringComparison GetStringComparison(this CaseSensitivity caseSensitivity, CommandPart part)
     {
-        if (part == CommandPart.CommandName && (caseSensitivity & CaseSensitivity.Commands) == 0)
-        {
-            return StringComparison.OrdinalIgnoreCase;
-        }
-        else if (part == CommandPart.LongOption && (caseSensitivity & CaseSensitivity.LongOptions) == 0)
+        if (part == CommandPart.CommandName && (caseSensitivity & CaseSensitivity.Commands) == 0 ||
+            part == CommandPart.LongOption && (caseSensitivity & CaseSensitivity.LongOptions) == 0)
         {
             return StringComparison.OrdinalIgnoreCase;
         }

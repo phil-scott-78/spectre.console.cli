@@ -7,7 +7,7 @@ internal static class StringExtensions
 #if NETSTANDARD2_0
         return text.IndexOf(token);
 #else
-        return text.IndexOf(token, System.StringComparison.Ordinal);
+        return text.IndexOf(token, StringComparison.Ordinal);
 #endif
     }
 }

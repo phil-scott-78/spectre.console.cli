@@ -25,7 +25,7 @@ internal sealed class CommandTreeTokenStream : IReadOnlyList<CommandTreeToken>
 
     public CommandTreeTokenStream(IEnumerable<CommandTreeToken> tokens)
     {
-        _tokens = new List<CommandTreeToken>(tokens ?? Enumerable.Empty<CommandTreeToken>());
+        _tokens = new List<CommandTreeToken>(tokens);
         _position = 0;
     }
 

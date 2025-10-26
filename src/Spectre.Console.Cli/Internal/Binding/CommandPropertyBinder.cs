@@ -8,7 +8,7 @@ internal static class CommandPropertyBinder
 
         foreach (var (parameter, value) in lookup)
         {
-            if (value != default)
+            if (value != null)
             {
                 parameter.Property.SetValue(settings, value);
             }

@@ -30,17 +30,21 @@ internal static class TypeRegistrarExtensions
 
             foreach (var parameter in command.Parameters)
             {
-                var pairDeconstructor = parameter?.PairDeconstructor?.Type;
+                var pairDeconstructor = parameter.PairDeconstructor?.Type;
                 if (pairDeconstructor != null)
                 {
                     registrar?.Register(pairDeconstructor, pairDeconstructor);
                 }
 
-                var typeConverterTypeName = parameter?.Converter?.ConverterTypeName;
+                var typeConverterTypeName = parameter.Converter?.ConverterTypeName;
                 if (!string.IsNullOrWhiteSpace(typeConverterTypeName))
                 {
                     var typeConverterType = Type.GetType(typeConverterTypeName);
-                    Debug.Assert(typeConverterType != null, "Could not create type");
+                    if (typeConverterType == null)
+                    {
+                        throw new InvalidOperationException($"Could not create type '{typeConverterTypeName}'");
+                    }
+
                     registrar?.Register(typeConverterType, typeConverterType);
                 }
             }

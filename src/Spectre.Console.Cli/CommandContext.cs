@@ -48,8 +48,8 @@ public sealed class CommandContext
         object? data)
     {
         Arguments = arguments.ToSafeReadOnlyList();
-        Remaining = remaining ?? throw new System.ArgumentNullException(nameof(remaining));
-        Name = name ?? throw new System.ArgumentNullException(nameof(name));
+        Remaining = remaining ?? throw new ArgumentNullException(nameof(remaining));
+        Name = name ?? throw new ArgumentNullException(nameof(name));
         Data = data;
     }
 }

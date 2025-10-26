@@ -44,7 +44,7 @@ internal sealed class CommandInfo : ICommandContainer, ICommandInfo
 
         Children = new List<CommandInfo>();
         Parameters = new List<CommandParameter>();
-        Examples = prototype.Examples ?? new List<string[]>();
+        Examples = prototype.Examples;
 
         if (CommandType != null && string.IsNullOrWhiteSpace(Description))
         {

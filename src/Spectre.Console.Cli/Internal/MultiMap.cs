@@ -1,11 +1,23 @@
 namespace Spectre.Console.Cli;
 
+/// <summary>
+/// Representation of a multi map.
+/// </summary>
+internal interface IMultiMap
+{
+    /// <summary>
+    /// Adds a key and a value to the multimap.
+    /// </summary>
+    /// <param name="pair">The pair to add.</param>
+    void Add((object? Key, object? Value) pair);
+}
+
 [SuppressMessage("Performance", "CA1812: Avoid uninstantiated internal classes")]
 internal sealed class MultiMap<TKey, TValue> : IMultiMap, ILookup<TKey, TValue>, IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
     where TKey : notnull
 {
-    private readonly IDictionary<TKey, MultiMapGrouping> _lookup;
-    private readonly IDictionary<TKey, TValue> _dictionary;
+    private readonly IDictionary<TKey, MultiMapGrouping> _lookup = new Dictionary<TKey, MultiMapGrouping>();
+    private readonly IDictionary<TKey, TValue> _dictionary = new Dictionary<TKey, TValue>();
 
     public int Count => _lookup.Count;
 
@@ -44,12 +56,6 @@ internal sealed class MultiMap<TKey, TValue> : IMultiMap, ILookup<TKey, TValue>,
 
             return Array.Empty<TValue>();
         }
-    }
-
-    public MultiMap()
-    {
-        _lookup = new Dictionary<TKey, MultiMapGrouping>();
-        _dictionary = new Dictionary<TKey, TValue>();
     }
 
     private sealed class MultiMapGrouping : IGrouping<TKey, TValue>
@@ -119,10 +125,17 @@ internal sealed class MultiMap<TKey, TValue> : IMultiMap, ILookup<TKey, TValue>,
         return _lookup.Remove(key);
     }
 
+#if NETSTANDARD2_0
+    public bool TryGetValue(TKey key, out TValue value)
+    {
+        return _dictionary.TryGetValue(key, out value);
+    }
+#else
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
         return _dictionary.TryGetValue(key, out value);
     }
+#endif
 
     public void Add(KeyValuePair<TKey, TValue> item)
     {

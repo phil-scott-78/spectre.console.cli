@@ -7,125 +7,123 @@ namespace Spectre.Console.Cli.Help;
 /// </summary>
 internal class HelpProviderResources
 {
-    private readonly ResourceManager resourceManager = new ResourceManager("Spectre.Console.Cli.Resources.HelpProvider", typeof(HelpProvider).Assembly);
-    private readonly CultureInfo? resourceCulture = null;
-
-    public HelpProviderResources()
-    {
-    }
+    private readonly ResourceManager _resourceManager;
+    private readonly CultureInfo? _resourceCulture;
 
     public HelpProviderResources(CultureInfo? culture)
     {
-        resourceCulture = culture;
+        _resourceCulture = culture;
+        _resourceManager = new ResourceManager(
+            "Spectre.Console.Cli.Resources.HelpProvider", typeof(HelpProvider).Assembly);
     }
 
     /// <summary>
-    /// Gets the localised string for ARGUMENTS.
+    /// Gets the localized string for "ARGUMENTS".
     /// </summary>
     internal string Arguments
     {
         get
         {
-            return resourceManager.GetString("Arguments", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("Arguments", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for COMMAND.
+    /// Gets the localized string for "COMMAND".
     /// </summary>
     internal string Command
     {
         get
         {
-            return resourceManager.GetString("Command", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("Command", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for COMMANDS.
+    /// Gets the localized string for "COMMANDS".
     /// </summary>
     internal string Commands
     {
         get
         {
-            return resourceManager.GetString("Commands", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("Commands", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for DEFAULT.
+    /// Gets the localized string for "DEFAULT".
     /// </summary>
     internal string Default
     {
         get
         {
-            return resourceManager.GetString("Default", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("Default", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for DESCRIPTION.
+    /// Gets the localized string for "DESCRIPTION".
     /// </summary>
     internal string Description
     {
         get
         {
-            return resourceManager.GetString("Description", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("Description", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for EXAMPLES.
+    /// Gets the localized string for "EXAMPLES".
     /// </summary>
     internal string Examples
     {
         get
         {
-            return resourceManager.GetString("Examples", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("Examples", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for OPTIONS.
+    /// Gets the localized string for "OPTIONS".
     /// </summary>
     internal string Options
     {
         get
         {
-            return resourceManager.GetString("Options", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("Options", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for Prints help information.
+    /// Gets the localized string for "Prints help information".
     /// </summary>
     internal string PrintHelpDescription
     {
         get
         {
-            return resourceManager.GetString("PrintHelpDescription", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("PrintHelpDescription", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for Prints version information.
+    /// Gets the localized string for "Prints version information".
     /// </summary>
     internal string PrintVersionDescription
     {
         get
         {
-            return resourceManager.GetString("PrintVersionDescription", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("PrintVersionDescription", _resourceCulture) ?? string.Empty;
         }
     }
 
     /// <summary>
-    /// Gets the localised string for USAGE.
+    /// Gets the localized string for "USAGE".
     /// </summary>
     internal string Usage
     {
         get
         {
-            return resourceManager.GetString("Usage", resourceCulture) ?? string.Empty;
+            return _resourceManager.GetString("Usage", _resourceCulture) ?? string.Empty;
         }
     }
 }

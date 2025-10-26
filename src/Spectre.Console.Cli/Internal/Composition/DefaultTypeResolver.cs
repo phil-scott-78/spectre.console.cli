@@ -2,17 +2,7 @@ namespace Spectre.Console.Cli;
 
 internal sealed class DefaultTypeResolver : IDisposable, ITypeResolver
 {
-    public ComponentRegistry Registry { get; }
-
-    public DefaultTypeResolver()
-        : this(null)
-    {
-    }
-
-    public DefaultTypeResolver(ComponentRegistry? registry)
-    {
-        Registry = registry ?? new ComponentRegistry();
-    }
+    public ComponentRegistry Registry { get; } = new();
 
     public void Dispose()
     {
@@ -37,26 +27,23 @@ internal sealed class DefaultTypeResolver : IDisposable, ITypeResolver
         }
 
         var registrations = Registry.GetRegistrations(type);
-        if (registrations != null)
+        if (isEnumerable)
         {
-            if (isEnumerable)
+            var result = Array.CreateInstance(type, registrations.Count);
+            for (var index = 0; index < registrations.Count; index++)
             {
-                var result = Array.CreateInstance(type, registrations.Count);
-                for (var index = 0; index < registrations.Count; index++)
-                {
-                    var registration = registrations.ElementAt(index);
-                    result.SetValue(Resolve(registration), index);
-                }
-
-                return result;
+                var registration = registrations.ElementAt(index);
+                result.SetValue(Resolve(registration), index);
             }
+
+            return result;
         }
 
-        return Resolve(registrations?.LastOrDefault());
+        return Resolve(registrations.LastOrDefault());
     }
 
-    public object? Resolve(ComponentRegistration? registration)
+    private object? Resolve(ComponentRegistration? registration)
     {
-        return registration?.Activator?.Activate(this);
+        return registration?.Activator.Activate(this);
     }
 }

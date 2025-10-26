@@ -13,13 +13,13 @@ internal sealed class XmlDocCommand : Command, IBuiltInCommand
         _writer = configuration.Settings.Console.GetConsole();
     }
 
-    public override int Execute(CommandContext context, CancellationToken cancellationToken)
+    protected override int Execute(CommandContext context, CancellationToken cancellationToken)
     {
         _writer.Write(Serialize(_model), Style.Plain);
         return 0;
     }
 
-    public static string Serialize(CommandModel model)
+    private static string Serialize(CommandModel model)
     {
         var settings = new XmlWriterSettings
         {
@@ -78,7 +78,7 @@ internal sealed class XmlDocCommand : Command, IBuiltInCommand
             node.SetNullableAttribute("ClrType", command.CommandType?.FullName);
         }
 
-        node.SetNullableAttribute("Settings", command.SettingsType?.FullName);
+        node.SetNullableAttribute("Settings", command.SettingsType.FullName);
 
         if (!string.IsNullOrWhiteSpace(command.Description))
         {
@@ -140,7 +140,7 @@ internal sealed class XmlDocCommand : Command, IBuiltInCommand
             node.SetAttribute("Position", argument.Position.ToString(CultureInfo.InvariantCulture));
             node.SetBooleanAttribute("Required", argument.IsRequired);
             node.SetEnumAttribute("Kind", argument.ParameterKind);
-            node.SetNullableAttribute("ClrType", argument.ParameterType?.FullName);
+            node.SetNullableAttribute("ClrType", argument.ParameterType.FullName);
 
             if (!string.IsNullOrWhiteSpace(argument.Description))
             {
@@ -184,7 +184,7 @@ internal sealed class XmlDocCommand : Command, IBuiltInCommand
             node.SetNullableAttribute("Value", option.ValueName);
             node.SetBooleanAttribute("Required", option.IsRequired);
             node.SetEnumAttribute("Kind", option.ParameterKind);
-            node.SetNullableAttribute("ClrType", option.ParameterType?.FullName);
+            node.SetNullableAttribute("ClrType", option.ParameterType.FullName);
 
             if (!string.IsNullOrWhiteSpace(option.Description))
             {

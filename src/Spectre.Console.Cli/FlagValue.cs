@@ -7,7 +7,7 @@ namespace Spectre.Console.Cli;
 public sealed class FlagValue<T> : IFlagValue
 {
     /// <summary>
-    /// Gets or sets a value indicating whether or not the flag was set or not.
+    /// Gets or sets a value indicating whether the flag was set or not.
     /// </summary>
     public bool IsSet { get; set; }
 

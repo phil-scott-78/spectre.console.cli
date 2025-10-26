@@ -2,12 +2,7 @@ namespace Spectre.Console.Cli;
 
 internal sealed class CommandValueLookup : IEnumerable<(CommandParameter Parameter, object? Value)>
 {
-    private readonly Dictionary<Guid, (CommandParameter Parameter, object? Value)> _lookup;
-
-    public CommandValueLookup()
-    {
-        _lookup = new Dictionary<Guid, (CommandParameter, object?)>();
-    }
+    private readonly Dictionary<Guid, (CommandParameter Parameter, object? Value)> _lookup = new();
 
     public IEnumerator<(CommandParameter Parameter, object? Value)> GetEnumerator()
     {

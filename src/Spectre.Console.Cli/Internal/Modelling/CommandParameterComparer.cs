@@ -23,7 +23,7 @@ internal static class CommandParameterComparer
 
         public int GetHashCode(CommandParameter? obj)
         {
-            return obj?.Property?.MetadataToken.GetHashCode() ?? 0;
+            return obj?.Property.MetadataToken.GetHashCode() ?? 0;
         }
     }
 }

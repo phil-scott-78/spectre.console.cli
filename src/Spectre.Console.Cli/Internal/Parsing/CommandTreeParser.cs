@@ -8,8 +8,7 @@ internal class CommandTreeParser
     private readonly ParsingMode _parsingMode;
     private readonly CommandOptionAttribute _help;
     private readonly bool _convertFlagsToRemainingArguments;
-
-    public CaseSensitivity CaseSensitivity { get; }
+    private readonly CaseSensitivity _caseSensitivity;
 
     public enum State
     {
@@ -23,8 +22,7 @@ internal class CommandTreeParser
         _parsingMode = parsingMode ?? _configuration.ParsingMode;
         _help = new CommandOptionAttribute("-?|-h|--help");
         _convertFlagsToRemainingArguments = convertFlagsToRemainingArguments ?? false;
-
-        CaseSensitivity = caseSensitivity;
+        _caseSensitivity = caseSensitivity;
     }
 
     public CommandTreeParserResult Parse(IEnumerable<string> args)
@@ -63,7 +61,7 @@ internal class CommandTreeParser
                 }
 
                 // Show help?
-                if (_help?.IsMatch(token.Value) == true)
+                if (_help.IsMatch(token.Value))
                 {
                     return new CommandTreeParserResult(
                         null, new RemainingArguments(context.GetRemainingArguments(), rawRemaining));
@@ -74,7 +72,7 @@ internal class CommandTreeParser
             }
 
             // Does the token value match a command?
-            var command = _configuration.FindCommand(token.Value, CaseSensitivity);
+            var command = _configuration.FindCommand(token.Value, _caseSensitivity);
             if (command == null)
             {
                 if (_configuration.DefaultCommand != null)
@@ -114,7 +112,7 @@ internal class CommandTreeParser
             throw new CommandRuntimeException("Could not consume token when parsing command.");
         }
 
-        var command = current.FindCommand(commandToken.Value, CaseSensitivity);
+        var command = current.FindCommand(commandToken.Value, _caseSensitivity);
         if (command == null)
         {
             throw CommandParseException.UnknownCommand(_configuration, parent, context.Arguments, commandToken);
@@ -192,7 +190,7 @@ internal class CommandTreeParser
         var token = stream.Expect(CommandTreeToken.Kind.String);
 
         // Command?
-        var command = node.Command.FindCommand(token.Value, CaseSensitivity);
+        var command = node.Command.FindCommand(token.Value, _caseSensitivity);
         if (command != null)
         {
             if (context.State == State.Normal)
@@ -256,7 +254,7 @@ internal class CommandTreeParser
         if (context.State == State.Normal)
         {
             // Find the option.
-            var option = node.FindOption(token.Value, isLongOption, CaseSensitivity);
+            var option = node.FindOption(token.Value, isLongOption, _caseSensitivity);
             if (option != null)
             {
                 ParseOptionValue(context, stream, token, node, option);
@@ -264,7 +262,7 @@ internal class CommandTreeParser
             }
 
             // Help?
-            if (_help?.IsMatch(token.Value) == true)
+            if (_help.IsMatch(token.Value))
             {
                 node.ShowHelp = true;
                 return;
@@ -294,20 +292,19 @@ internal class CommandTreeParser
         CommandTree current,
         CommandParameter? parameter = null)
     {
-        bool addToMappedCommandParameters = parameter != null;
-
+        var addToMappedCommandParameters = parameter != null;
         var value = default(string);
 
         // Parse the value of the token (if any).
         var valueToken = stream.Peek();
         if (valueToken?.TokenKind == CommandTreeToken.Kind.String)
         {
-            bool parseValue = token is not { TokenKind: CommandTreeToken.Kind.ShortOption, IsGrouped: true };
+            var parseValue = token is not { TokenKind: CommandTreeToken.Kind.ShortOption, IsGrouped: true };
 
             if (context.State == State.Normal && parseValue)
             {
                 // Is this a command?
-                if (current.Command.FindCommand(valueToken.Value, CaseSensitivity) == null)
+                if (current.Command.FindCommand(valueToken.Value, _caseSensitivity) == null)
                 {
                     if (parameter != null)
                     {

@@ -9,10 +9,10 @@ public interface ICommandAppSettings
     /// Gets or sets the culture.
     /// </summary>
     /// <remarks>
-    /// Text displayed by <see cref="Help.HelpProvider"/> can be localised, but defaults to English.
+    /// Text displayed by <see cref="Help.HelpProvider"/> can be localized, but defaults to English.
     /// Setting this property informs the resource manager which culture to use when fetching strings.
-    /// English will be used when a culture has not been specified (ie. this property is null)
-    /// or a string has not been localised for the specified culture.
+    /// English will be used when a culture has not been specified (i.e. this property is null)
+    /// or a string has not been localized for the specified culture.
     /// </remarks>
     CultureInfo? Culture { get; set; }
 
@@ -69,20 +69,20 @@ public interface ICommandAppSettings
     CaseSensitivity CaseSensitivity { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not parsing is strict.
+    /// Gets or sets a value indicating whether parsing is strict.
     /// </summary>
     bool StrictParsing { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not flags found on the command line
+    /// Gets or sets a value indicating whether flags found on the command line
     /// that would normally result in a <see cref="CommandParseException"/> being thrown
     /// during parsing with the message "Flags cannot be assigned a value."
-    /// should instead be added to the remaining arguments collection.
+    /// should instead be added to the remaining argument collection.
     /// </summary>
     bool ConvertFlagsToRemainingArguments { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not exceptions should be propagated.
+    /// Gets or sets a value indicating whether exceptions should be propagated.
     /// <para>Setting this to <c>true</c> will disable default Exception handling and
     /// any <see cref="ExceptionHandler"/>, if set.</para>
     /// </summary>
@@ -95,7 +95,7 @@ public interface ICommandAppSettings
     int CancellationExitCode { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not examples should be validated.
+    /// Gets or sets a value indicating whether examples should be validated.
     /// </summary>
     bool ValidateExamples { get; set; }
 

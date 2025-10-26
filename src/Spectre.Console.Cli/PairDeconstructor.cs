@@ -25,14 +25,3 @@ public abstract class PairDeconstructor<TKey, TValue> : IPairDeconstructor
         return Deconstruct(value);
     }
 }
-
-/// <summary>
-/// Base class for a pair deconstructor.
-/// </summary>
-/// <typeparam name="TKey">The key type.</typeparam>
-/// <typeparam name="TValue">The value type.</typeparam>
-/// <remarks>This class is misspelled, use <see cref="PairDeconstructor{TKey,TValue}"/> instead.</remarks>
-[Obsolete("Use PairDeconstructor instead")]
-public abstract class PairDeconstuctor<TKey, TValue> : PairDeconstructor<TKey, TValue>
-{
-}

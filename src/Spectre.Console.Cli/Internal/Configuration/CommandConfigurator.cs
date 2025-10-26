@@ -2,40 +2,40 @@ namespace Spectre.Console.Cli;
 
 internal sealed class CommandConfigurator : ICommandConfigurator
 {
-    public ConfiguredCommand Command { get; }
+    private readonly ConfiguredCommand _command;
 
     public CommandConfigurator(ConfiguredCommand command)
     {
-        Command = command;
+        _command = command ?? throw new ArgumentNullException(nameof(command));
     }
 
     public ICommandConfigurator WithExample(params string[] args)
     {
-        Command.Examples.Add(args);
+        _command.Examples.Add(args);
         return this;
     }
 
     public ICommandConfigurator WithAlias(string alias)
     {
-        Command.Aliases.Add(alias);
+        _command.Aliases.Add(alias);
         return this;
     }
 
     public ICommandConfigurator WithDescription(string description)
     {
-        Command.Description = description;
+        _command.Description = description;
         return this;
     }
 
     public ICommandConfigurator WithData(object data)
     {
-        Command.Data = data;
+        _command.Data = data;
         return this;
     }
 
     public ICommandConfigurator IsHidden()
     {
-        Command.IsHidden = true;
+        _command.IsHidden = true;
         return this;
     }
 }

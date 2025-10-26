@@ -2,12 +2,7 @@ namespace Spectre.Console.Cli;
 
 internal sealed class DefaultTypeRegistrar : ITypeRegistrar
 {
-    private readonly Queue<Action<ComponentRegistry>> _registry;
-
-    public DefaultTypeRegistrar()
-    {
-        _registry = new Queue<Action<ComponentRegistry>>();
-    }
+    private readonly Queue<Action<ComponentRegistry>> _registry = new();
 
     public ITypeResolver Build()
     {
@@ -23,7 +18,7 @@ internal sealed class DefaultTypeRegistrar : ITypeRegistrar
 
     public void Register(Type service, Type implementation)
     {
-        var registration = new ComponentRegistration(implementation, new ReflectionActivator(implementation), new[] { service });
+        var registration = new ComponentRegistration(implementation, new ReflectionActivator(implementation), [service]);
         _registry.Enqueue(registry => registry.Register(registration));
     }
 

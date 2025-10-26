@@ -30,7 +30,7 @@ internal sealed class CommandModel : ICommandContainer, ICommandModel
     /// <summary>
     /// Gets the name of the application.
     /// If the provided <paramref name="applicationName"/> is not null or empty,
-    /// it is returned. Otherwise the name of the current application
+    /// it is returned. Otherwise, the name of the current application
     /// is determined based on the executable file's name.
     /// </summary>
     /// <param name="applicationName">The optional name of the application.</param>

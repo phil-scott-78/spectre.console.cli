@@ -2,7 +2,7 @@ namespace Spectre.Console.Cli;
 
 internal static class ListExtensions
 {
-    public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+    public static void ForEach<T>(this IEnumerable<T>? source, Action<T>? action)
     {
         if (source != null && action != null)
         {

@@ -81,9 +81,7 @@ public sealed class CommandApp : ICommandApp
         catch (Exception ex)
         {
             // Should we always propagate when debugging?
-            if (Debugger.IsAttached
-                && ex is CommandAppException appException
-                && appException.AlwaysPropagateWhenDebugging)
+            if (Debugger.IsAttached && ex is CommandAppException { AlwaysPropagateWhenDebugging: true })
             {
                 throw;
             }
@@ -121,9 +119,9 @@ public sealed class CommandApp : ICommandApp
 
     private static List<IRenderable?>? GetRenderableErrorMessage(Exception ex, bool convert = true)
     {
-        if (ex is CommandAppException renderable && renderable.Pretty != null)
+        if (ex is CommandAppException { Pretty: not null } renderable)
         {
-            return new List<IRenderable?> { renderable.Pretty };
+            return [renderable.Pretty];
         }
 
         if (convert)

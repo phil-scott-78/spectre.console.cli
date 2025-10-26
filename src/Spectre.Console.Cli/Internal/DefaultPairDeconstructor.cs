@@ -15,7 +15,7 @@ internal sealed class DefaultPairDeconstructor : IPairDeconstructor
             throw new ArgumentNullException(nameof(value));
         }
 
-        var parts = value.Split(new[] { '=' }, StringSplitOptions.None);
+        var parts = value.Split(['='], StringSplitOptions.None);
         if (parts.Length < 1 || parts.Length > 2)
         {
             throw CommandParseException.ValueIsNotInValidFormat(value);

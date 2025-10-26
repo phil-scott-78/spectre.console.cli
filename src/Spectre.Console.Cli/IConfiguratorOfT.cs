@@ -24,7 +24,7 @@ public interface IConfigurator<in TSettings>
     /// </summary>
     /// <remarks>
     /// This is the command that will run if the user doesn't specify one on the command line.
-    /// It must be able to execute successfully by itself ie. without requiring any command line
+    /// It must be able to execute successfully by itself i.e. without requiring any command line
     /// arguments, flags or option values.
     /// </remarks>
     /// <typeparam name="TDefaultCommand">The default command type.</typeparam>

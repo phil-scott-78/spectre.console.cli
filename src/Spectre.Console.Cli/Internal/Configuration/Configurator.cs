@@ -91,7 +91,7 @@ internal sealed class Configurator : IUnsafeConfigurator, IConfigurator, IConfig
 
         method = method.MakeGenericMethod(command);
 
-        if (!(method.Invoke(this, new object[] { name }) is ICommandConfigurator result))
+        if (method.Invoke(this, [name]) is not ICommandConfigurator result)
         {
             throw new CommandConfigurationException("Invoking AddCommand returned null.");
         }

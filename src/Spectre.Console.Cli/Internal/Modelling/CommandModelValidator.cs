@@ -57,7 +57,7 @@ internal static class CommandModelValidator
         }
 
         // No children?
-        if (command.IsBranch && command.Children.Count == 0)
+        if (command is { IsBranch: true, Children.Count: 0 })
         {
             throw CommandConfigurationException.BranchHasNoChildren(command);
         }
@@ -86,7 +86,7 @@ internal static class CommandModelValidator
         // Arguments
         foreach (var argument in arguments)
         {
-            if (argument.IsRequired && argument.DefaultValue != null)
+            if (argument is { IsRequired: true, DefaultValue: not null })
             {
                 throw CommandConfigurationException.RequiredArgumentsCannotHaveDefaultValue(argument);
             }
@@ -99,7 +99,7 @@ internal static class CommandModelValidator
             // Pair deconstructable?
             if (option.Property.PropertyType.IsPairDeconstructable())
             {
-                if (option.PairDeconstructor != null && option.Converter != null)
+                if (option is { PairDeconstructor: not null, Converter: not null })
                 {
                     throw CommandConfigurationException.OptionBothHasPairDeconstructorAndTypeParameter(option);
                 }
@@ -129,7 +129,7 @@ internal static class CommandModelValidator
         examples.AddRangeIfNotNull(model.Examples);
 
         // Get all examples.
-        var queue = new Queue<ICommandContainer>(new[] { model });
+        var queue = new Queue<ICommandContainer>([model]);
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
@@ -166,11 +166,7 @@ internal static class CommandModelValidator
             {
                 if (!string.IsNullOrWhiteSpace(key))
                 {
-                    if (!result.ContainsKey(key))
-                    {
-                        result.Add(key, 0);
-                    }
-
+                    result.TryAdd(key, 0);
                     result[key]++;
                 }
             }

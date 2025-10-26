@@ -16,8 +16,8 @@ internal static class CommandLineParseExceptionFactory
     {
         var composer = new Composer();
 
-        var position = token?.Position ?? 0;
-        var value = token?.Representation ?? arguments;
+        var position = token.Position;
+        var value = token.Representation;
 
         // Header
         composer.LineBreak();

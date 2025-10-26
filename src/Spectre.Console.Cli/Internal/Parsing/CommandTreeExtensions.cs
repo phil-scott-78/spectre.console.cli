@@ -2,7 +2,7 @@ namespace Spectre.Console.Cli;
 
 internal static class CommandTreeExtensions
 {
-    public static CommandTree? GetRootCommand(this CommandTree node)
+    public static CommandTree GetRootCommand(this CommandTree node)
     {
         while (node.Parent != null)
         {
@@ -48,7 +48,7 @@ internal static class CommandTreeExtensions
         var node = tree.Parent;
         while (node != null)
         {
-            var option = node.Command?.Parameters.OfType<CommandOption>()
+            var option = node.Command.Parameters.OfType<CommandOption>()
                 .FirstOrDefault(o => longOption
                     ? o.LongNames.Contains(name, StringComparer.Ordinal)
                     : o.ShortNames.Contains(name, StringComparer.Ordinal));

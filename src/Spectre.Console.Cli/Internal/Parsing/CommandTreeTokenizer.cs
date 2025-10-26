@@ -124,12 +124,7 @@ internal static class CommandTreeTokenizer
         switch (character)
         {
             case '-':
-                var option = ScanLongOption(context, reader, position);
-                if (option != null)
-                {
-                    result.Add(option);
-                }
-
+                result.Add(ScanLongOption(context, reader, position));
                 break;
             default:
                 result.AddRange(ScanShortOptions(context, reader, position));
@@ -193,11 +188,11 @@ internal static class CommandTreeTokenizer
                 // be tokenized as strings. This block handles parsing those cases, but we only allow this
                 // when the digit is the first character in the token (i.e. "-a1" is always an error), hence the
                 // result.Count == 0 check above.
-                string value = string.Empty;
+                var value = string.Empty;
 
                 while (!reader.ReachedEnd)
                 {
-                    char c = reader.Peek();
+                    var c = reader.Peek();
 
                     if (char.IsWhiteSpace(c))
                     {
@@ -245,7 +240,7 @@ internal static class CommandTreeTokenizer
             return new CommandTreeToken(CommandTreeToken.Kind.Remaining, position, "--", "--");
         }
 
-        var name = ScanString(context, reader, new[] { '=', ':' });
+        var name = ScanString(context, reader, ['=', ':']);
 
         // Perform validation of the name.
         if (name.Value == " ")

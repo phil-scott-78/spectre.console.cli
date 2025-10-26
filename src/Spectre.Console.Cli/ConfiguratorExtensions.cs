@@ -266,7 +266,7 @@ public static class ConfiguratorExtensions
             throw new ArgumentNullException(nameof(configurator));
         }
 
-        configurator.Settings.Registrar.RegisterInstance<ICommandInterceptor>(interceptor);
+        configurator.Settings.Registrar.RegisterInstance(interceptor);
         return configurator;
     }
 

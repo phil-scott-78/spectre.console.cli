@@ -16,16 +16,10 @@ internal static class TemplateParser
 
     public sealed class OptionResult
     {
-        public List<string> LongNames { get; set; }
-        public List<string> ShortNames { get; set; }
+        public List<string> LongNames { get; set; } = [];
+        public List<string> ShortNames { get; set; } = [];
         public string? Value { get; set; }
         public bool ValueIsOptional { get; set; }
-
-        public OptionResult()
-        {
-            ShortNames = new List<string>();
-            LongNames = new List<string>();
-        }
     }
 
     public static ArgumentResult ParseArgumentTemplate(string template)

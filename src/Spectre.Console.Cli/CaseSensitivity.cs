@@ -7,22 +7,22 @@ namespace Spectre.Console.Cli;
 public enum CaseSensitivity
 {
     /// <summary>
-    /// Nothing is case sensitive.
+    /// Nothing is case-sensitive.
     /// </summary>
     None = 0,
 
     /// <summary>
-    /// Long options are case sensitive.
+    /// Long options are case-sensitive.
     /// </summary>
     LongOptions = 1,
 
     /// <summary>
-    /// Commands are case sensitive.
+    /// Commands are case-sensitive.
     /// </summary>
     Commands = 2,
 
     /// <summary>
-    /// Everything is case sensitive.
+    /// Everything is case-sensitive.
     /// </summary>
     All = LongOptions | Commands,
 }

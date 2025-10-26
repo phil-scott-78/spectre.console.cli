@@ -2,16 +2,16 @@ namespace Spectre.Console.Cli;
 
 internal sealed class BranchConfigurator : IBranchConfigurator
 {
-    public ConfiguredCommand Command { get; }
+    private readonly ConfiguredCommand _command;
 
     public BranchConfigurator(ConfiguredCommand command)
     {
-        Command = command;
+        _command = command ?? throw new ArgumentNullException(nameof(command));
     }
 
     public IBranchConfigurator WithAlias(string alias)
     {
-        Command.Aliases.Add(alias);
+        _command.Aliases.Add(alias);
         return this;
     }
 }

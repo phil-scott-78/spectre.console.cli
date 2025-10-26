@@ -72,7 +72,7 @@ internal sealed class CommandExecutor
             // OpenCLI?
             if (firstArgument.Equals(CliConstants.DumpHelpOpenCliOption, StringComparison.OrdinalIgnoreCase))
             {
-                // Replace all arguments with the opencligen command
+                // Replace all arguments with the opencli command
                 arguments = ["cli", "opencli"];
             }
         }
@@ -93,7 +93,7 @@ internal sealed class CommandExecutor
             var helpProvider = helpProviders?.LastOrDefault() ?? new HelpProvider(configuration.Settings);
 
             // Currently the root?
-            if (parsedResult?.Tree == null)
+            if (parsedResult.Tree == null)
             {
                 // Display help.
                 configuration.Settings.Console.SafeRender(helpProvider.Write(model, null));
@@ -133,21 +133,19 @@ internal sealed class CommandExecutor
     private CommandTreeParserResult ParseCommandLineArguments(CommandModel model, CommandAppSettings settings, IReadOnlyList<string> args)
     {
         CommandTreeParserResult? parsedResult = null;
-        CommandTreeTokenizerResult tokenizerResult;
 
         try
         {
-            (parsedResult, tokenizerResult) = InternalParseCommandLineArguments(model, settings, args);
+            (parsedResult, var tokenizerResult) = InternalParseCommandLineArguments(model, settings, args);
 
             var lastParsedLeaf = parsedResult.Tree?.GetLeafCommand();
             var lastParsedCommand = lastParsedLeaf?.Command;
 
-            if (lastParsedLeaf != null && lastParsedCommand != null &&
-            lastParsedCommand.IsBranch && !lastParsedLeaf.ShowHelp &&
-            lastParsedCommand.DefaultCommand != null)
+            if (lastParsedLeaf != null && lastParsedCommand is { IsBranch: true } && !lastParsedLeaf.ShowHelp &&
+                lastParsedCommand.DefaultCommand != null)
             {
                 // Adjust for any parsed remaining arguments by
-                // inserting the the default command ahead of them.
+                // inserting the default command ahead of them.
                 var position = tokenizerResult.Tokens.Position;
                 foreach (var parsedRemaining in parsedResult.Remaining.Parsed)
                 {
@@ -161,7 +159,7 @@ internal sealed class CommandExecutor
                 var argsWithDefaultCommand = new List<string>(args);
                 argsWithDefaultCommand.Insert(position, lastParsedCommand.DefaultCommand.Name);
 
-                (parsedResult, tokenizerResult) = InternalParseCommandLineArguments(model, settings, argsWithDefaultCommand);
+                (parsedResult, _) = InternalParseCommandLineArguments(model, settings, argsWithDefaultCommand);
             }
         }
         catch (CommandParseException) when (parsedResult == null && settings.ParsingMode == ParsingMode.Strict)
@@ -169,15 +167,14 @@ internal sealed class CommandExecutor
             // The parsing exception might be resolved by adding in the default command,
             // but we can't know for sure. Take a brute force approach and try this for
             // every position between the arguments.
-            for (int i = 0; i < args.Count; i++)
+            for (var i = 0; i < args.Count; i++)
             {
                 var argsWithDefaultCommand = new List<string>(args);
                 argsWithDefaultCommand.Insert(args.Count - i, "__default_command");
 
                 try
                 {
-                    (parsedResult, tokenizerResult) = InternalParseCommandLineArguments(model, settings, argsWithDefaultCommand);
-
+                    (parsedResult, _) = InternalParseCommandLineArguments(model, settings, argsWithDefaultCommand);
                     break;
                 }
                 catch (CommandParseException)
@@ -198,7 +195,7 @@ internal sealed class CommandExecutor
         {
             // The arguments failed to parse despite everything we tried above.
             // Exceptions should be thrown above before ever getting this far,
-            // however the following is the ulimately backstop and avoids
+            // however the following is the ultimately backstop and avoids
             // the compiler from complaining about returning null.
             throw CommandParseException.UnknownParsingError();
         }

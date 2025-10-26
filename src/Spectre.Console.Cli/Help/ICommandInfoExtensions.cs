@@ -9,7 +9,7 @@ internal static class ICommandInfoExtensions
     /// <returns>The list of commands from current to root, as traversed by <see cref="CommandInfo.Parent"/>.</returns>
     public static List<ICommandInfo> Flatten(this ICommandInfo commandInfo)
     {
-        var result = new Stack<Help.ICommandInfo>();
+        var result = new Stack<ICommandInfo>();
 
         var current = commandInfo;
         while (current != null)

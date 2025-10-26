@@ -14,7 +14,7 @@ internal static class CommandBinder
             {
                 foreach (var parameter in parameters)
                 {
-                    if (lookup.HasParameterWithName(parameter?.Name))
+                    if (lookup.HasParameterWithName(parameter.Name))
                     {
                         // Use constructor injection.
                         return CommandConstructorBinder.CreateSettings(lookup, constructor, resolver);

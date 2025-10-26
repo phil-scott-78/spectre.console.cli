@@ -20,7 +20,7 @@ public sealed partial class CommandAppTests
             var result = fixture.Run(Constants.VersionCommand);
 
             // Then
-            result.Output.ShouldStartWith("Spectre.Cli version ");
+            result.Output.ShouldStartWith("Spectre.Console.Cli version ");
         }
 
         [Theory]

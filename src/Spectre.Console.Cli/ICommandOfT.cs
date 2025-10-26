@@ -13,6 +13,6 @@ public interface ICommand<TSettings> : ICommandLimiter<TSettings>
     /// <param name="context">The command context.</param>
     /// <param name="settings">The settings.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to abort the command.</param>
-    /// <returns>An integer indicating whether or not the command executed successfully.</returns>
+    /// <returns>An integer indicating whether the command executed successfully.</returns>
     Task<int> ExecuteAsync(CommandContext context, TSettings settings, CancellationToken cancellationToken);
 }

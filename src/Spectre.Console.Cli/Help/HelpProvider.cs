@@ -8,8 +8,8 @@ namespace Spectre.Console.Cli.Help;
 /// </remarks>
 public class HelpProvider : IHelpProvider
 {
-    private readonly HelpProviderResources resources;
-    private readonly HelpProviderStyle? helpStyles;
+    private readonly HelpProviderResources _resources;
+    private readonly HelpProviderStyle? _helpStyles;
 
     /// <summary>
     /// Gets a value indicating how many examples from direct children to show in the help text.
@@ -52,8 +52,8 @@ public class HelpProvider : IHelpProvider
         public static IReadOnlyList<HelpArgument> Get(ICommandInfo? command)
         {
             var arguments = new List<HelpArgument>();
-            arguments.AddRange(command?.Parameters?.OfType<ICommandArgument>()?.Select(
-                                   x => new HelpArgument(x.Value, x.Position, x.IsRequired, x.Description))
+            arguments.AddRange(command?.Parameters.OfType<ICommandArgument>()
+                                   .Select(x => new HelpArgument(x.Value, x.Position, x.IsRequired, x.Description))
                                ?? Array.Empty<HelpArgument>());
             return arguments;
         }
@@ -103,7 +103,7 @@ public class HelpProvider : IHelpProvider
             if ((command?.Parent == null) && !(command?.IsBranch ?? false) && (command?.IsDefaultCommand ?? true))
             {
                 // Check whether the default command has a version option in its settings.
-                var versionCommandOption = command?.Parameters?.OfType<CommandOption>()?.FirstOrDefault(o =>
+                var versionCommandOption = command?.Parameters.OfType<CommandOption>().FirstOrDefault(o =>
                     (o.ShortNames.FirstOrDefault(v => v.Equals("v", StringComparison.OrdinalIgnoreCase)) != null) ||
                     (o.LongNames.FirstOrDefault(v => v.Equals("version", StringComparison.OrdinalIgnoreCase)) != null));
 
@@ -123,7 +123,9 @@ public class HelpProvider : IHelpProvider
                                     new HelpOption(
                                         o.ShortNames.FirstOrDefault(), o.LongNames.FirstOrDefault(),
                                         o.ValueName, o.ValueIsOptional, o.IsRequired, o.Description,
-                                        o.IsFlag && o.DefaultValue?.Value is false ? null : o.DefaultValue?.Value))
+                                        o is { IsFlag: true, DefaultValue.Value: false }
+                                            ? null
+                                            : o.DefaultValue?.Value))
                                 ?? Array.Empty<HelpOption>());
             return parameters;
         }
@@ -141,9 +143,9 @@ public class HelpProvider : IHelpProvider
 
         // Don't provide a default style if HelpProviderStyles is null,
         // as the user will have explicitly done this to output unstyled help text
-        this.helpStyles = settings.HelpProviderStyles;
+        this._helpStyles = settings.HelpProviderStyles;
 
-        resources = new HelpProviderResources(settings.Culture);
+        _resources = new HelpProviderResources(settings.Culture);
     }
 
     /// <inheritdoc/>
@@ -188,7 +190,7 @@ public class HelpProvider : IHelpProvider
         }
 
         var composer = NewComposer();
-        composer.Style(helpStyles?.Description?.Header ?? Style.Plain, $"{resources.Description}:").LineBreak();
+        composer.Style(_helpStyles?.Description?.Header ?? Style.Plain, $"{_resources.Description}:").LineBreak();
         composer.Text(NormalizeDescription(command.Description)).LineBreak();
         yield return composer.LineBreak();
     }
@@ -202,15 +204,15 @@ public class HelpProvider : IHelpProvider
     public virtual IEnumerable<IRenderable> GetUsage(ICommandModel model, ICommandInfo? command)
     {
         var composer = NewComposer();
-        composer.Style(helpStyles?.Usage?.Header ?? Style.Plain, $"{resources.Usage}:").LineBreak();
+        composer.Style(_helpStyles?.Usage?.Header ?? Style.Plain, $"{_resources.Usage}:").LineBreak();
         composer.Tab().Text(model.ApplicationName);
 
         var parameters = new List<Composer>();
 
         if (command == null)
         {
-            parameters.Add(NewComposer().Style(helpStyles?.Usage?.Options ?? Style.Plain, $"[{resources.Options}]"));
-            parameters.Add(NewComposer().Style(helpStyles?.Usage?.Command ?? Style.Plain, $"<{resources.Command}>"));
+            parameters.Add(NewComposer().Style(_helpStyles?.Usage?.Options ?? Style.Plain, $"[{_resources.Options}]"));
+            parameters.Add(NewComposer().Style(_helpStyles?.Usage?.Command ?? Style.Plain, $"<{_resources.Command}>"));
         }
         else
         {
@@ -223,7 +225,7 @@ public class HelpProvider : IHelpProvider
                     if (isCurrent)
                     {
                         parameters.Add(NewComposer().Style(
-                            helpStyles?.Usage?.CurrentCommand ?? Style.Plain,
+                            _helpStyles?.Usage?.CurrentCommand ?? Style.Plain,
                             $"{current.Name}"));
                     }
                     else
@@ -240,7 +242,7 @@ public class HelpProvider : IHelpProvider
                                      .Where(a => a.IsRequired).OrderBy(a => a.Position).ToArray())
                         {
                             parameters.Add(NewComposer().Style(
-                                helpStyles?.Usage?.RequiredArgument ?? Style.Plain,
+                                _helpStyles?.Usage?.RequiredArgument ?? Style.Plain,
                                 $"<{argument.Value}>"));
                         }
                     }
@@ -252,7 +254,7 @@ public class HelpProvider : IHelpProvider
                         foreach (var optionalArgument in optionalArguments)
                         {
                             parameters.Add(NewComposer().Style(
-                                helpStyles?.Usage?.OptionalArgument ?? Style.Plain,
+                                _helpStyles?.Usage?.OptionalArgument ?? Style.Plain,
                                 $"[{optionalArgument.Value}]"));
                         }
                     }
@@ -261,33 +263,33 @@ public class HelpProvider : IHelpProvider
                 if (isCurrent)
                 {
                     parameters.Add(NewComposer()
-                        .Style(helpStyles?.Usage?.Options ?? Style.Plain, $"[{resources.Options}]"));
+                        .Style(_helpStyles?.Usage?.Options ?? Style.Plain, $"[{_resources.Options}]"));
                 }
             }
 
-            if (command.IsBranch && command.DefaultCommand == null)
+            if (command is { IsBranch: true, DefaultCommand: null })
             {
                 // The user must specify the command
                 parameters.Add(NewComposer()
-                    .Style(helpStyles?.Usage?.Command ?? Style.Plain, $"<{resources.Command}>"));
+                    .Style(_helpStyles?.Usage?.Command ?? Style.Plain, $"<{_resources.Command}>"));
             }
-            else if (command.IsBranch && command.DefaultCommand != null && command.Commands.Count > 0)
+            else if (command is { IsBranch: true, DefaultCommand: not null, Commands.Count: > 0 })
             {
                 // We are on a branch with a default command
                 // The user can optionally specify the command
                 parameters.Add(NewComposer()
-                    .Style(helpStyles?.Usage?.Command ?? Style.Plain, $"[{resources.Command}]"));
+                    .Style(_helpStyles?.Usage?.Command ?? Style.Plain, $"[{_resources.Command}]"));
             }
             else if (command.IsDefaultCommand)
             {
-                var commands = model.Commands.Where(x => !x.IsHidden && !x.IsDefaultCommand).ToList();
+                var commands = model.Commands.Where(x => x is { IsHidden: false, IsDefaultCommand: false }).ToList();
 
                 if (commands.Count > 0)
                 {
                     // Commands other than the default are present
                     // So make these optional in the usage statement
                     parameters.Add(NewComposer()
-                        .Style(helpStyles?.Usage?.Command ?? Style.Plain, $"[{resources.Command}]"));
+                        .Style(_helpStyles?.Usage?.Command ?? Style.Plain, $"[{_resources.Command}]"));
                 }
             }
         }
@@ -295,7 +297,7 @@ public class HelpProvider : IHelpProvider
         composer.Join(" ", parameters);
         composer.LineBreak();
 
-        return new[] { composer };
+        return [composer];
     }
 
     /// <summary>
@@ -312,7 +314,7 @@ public class HelpProvider : IHelpProvider
     {
         var maxExamples = int.MaxValue;
 
-        var examples = command?.Examples?.ToList() ?? model.Examples?.ToList() ?? new List<string[]>();
+        var examples = command?.Examples.ToList() ?? model.Examples.ToList();
         if (examples.Count == 0)
         {
             // Since we're not checking direct examples,
@@ -322,7 +324,7 @@ public class HelpProvider : IHelpProvider
             // Start at the current command (if exists)
             // or alternatively commence at the model.
             var commandContainer = command ?? (ICommandContainer)model;
-            var queue = new Queue<ICommandContainer>(new[] { commandContainer });
+            var queue = new Queue<ICommandContainer>([commandContainer]);
 
             // Traverse the command tree and look for examples.
             // As soon as a node contains commands, bail.
@@ -351,17 +353,17 @@ public class HelpProvider : IHelpProvider
         {
             var composer = NewComposer();
             composer.LineBreak();
-            composer.Style(helpStyles?.Examples?.Header ?? Style.Plain, $"{resources.Examples}:").LineBreak();
+            composer.Style(_helpStyles?.Examples?.Header ?? Style.Plain, $"{_resources.Examples}:").LineBreak();
 
             for (var index = 0; index < Math.Min(maxExamples, examples.Count); index++)
             {
                 var args = string.Join(" ", examples[index]);
                 composer.Tab().Text(model.ApplicationName).Space()
-                    .Style(helpStyles?.Examples?.Arguments ?? Style.Plain, args);
+                    .Style(_helpStyles?.Examples?.Arguments ?? Style.Plain, args);
                 composer.LineBreak();
             }
 
-            return new[] { composer };
+            return [composer];
         }
 
         return Array.Empty<IRenderable>();
@@ -383,7 +385,7 @@ public class HelpProvider : IHelpProvider
 
         var result = new List<IRenderable>
         {
-            NewComposer().LineBreak().Style(helpStyles?.Arguments?.Header ?? Style.Plain, $"{resources.Arguments}:")
+            NewComposer().LineBreak().Style(_helpStyles?.Arguments?.Header ?? Style.Plain, $"{_resources.Arguments}:")
                 .LineBreak(),
         };
 
@@ -394,14 +396,14 @@ public class HelpProvider : IHelpProvider
         foreach (var argument in arguments.Where(x => x.Required).OrderBy(x => x.Position))
         {
             grid.AddRow(
-                NewComposer().Style(helpStyles?.Arguments?.RequiredArgument ?? Style.Plain, $"<{argument.Name}>"),
+                NewComposer().Style(_helpStyles?.Arguments?.RequiredArgument ?? Style.Plain, $"<{argument.Name}>"),
                 NewComposer().Text(NormalizeDescription(argument.Description)));
         }
 
         foreach (var argument in arguments.Where(x => !x.Required).OrderBy(x => x.Position))
         {
             grid.AddRow(
-                NewComposer().Style(helpStyles?.Arguments?.OptionalArgument ?? Style.Plain, $"[{argument.Name}]"),
+                NewComposer().Style(_helpStyles?.Arguments?.OptionalArgument ?? Style.Plain, $"[{argument.Name}]"),
                 NewComposer().Text(NormalizeDescription(argument.Description)));
         }
 
@@ -419,7 +421,7 @@ public class HelpProvider : IHelpProvider
     public virtual IEnumerable<IRenderable> GetOptions(ICommandModel model, ICommandInfo? command)
     {
         // Collect all options into a single structure.
-        var parameters = HelpOption.Get(model, command, resources);
+        var parameters = HelpOption.Get(model, command, _resources);
         if (parameters.Count == 0)
         {
             return Array.Empty<IRenderable>();
@@ -427,7 +429,7 @@ public class HelpProvider : IHelpProvider
 
         var result = new List<IRenderable>
         {
-            NewComposer().LineBreak().Style(helpStyles?.Options?.Header ?? Style.Plain, $"{resources.Options}:")
+            NewComposer().LineBreak().Style(_helpStyles?.Options?.Header ?? Style.Plain, $"{_resources.Options}:")
                 .LineBreak(),
         };
 
@@ -447,7 +449,7 @@ public class HelpProvider : IHelpProvider
         {
             grid.AddRow(
                 NewComposer().Space(),
-                NewComposer().Style(helpStyles?.Options?.DefaultValueHeader ?? Style.Plain, resources.Default),
+                NewComposer().Style(_helpStyles?.Options?.DefaultValueHeader ?? Style.Plain, _resources.Default),
                 NewComposer().Space());
         }
 
@@ -465,7 +467,7 @@ public class HelpProvider : IHelpProvider
             {
                 description = string.IsNullOrWhiteSpace(description)
                     ? "[i]Required[/]"
-                    : description.TrimEnd('.') + ". [i]Required[/]";
+                    : description!.TrimEnd('.') + ". [i]Required[/]";
             }
 
             columns.Add(NewComposer().Text(NormalizeDescription(description)));
@@ -487,7 +489,7 @@ public class HelpProvider : IHelpProvider
     public virtual IEnumerable<IRenderable> GetCommands(ICommandModel model, ICommandInfo? command)
     {
         var commandContainer = command ?? (ICommandContainer)model;
-        bool isDefaultCommand = command?.IsDefaultCommand ?? false;
+        var isDefaultCommand = command?.IsDefaultCommand ?? false;
 
         var commands = isDefaultCommand ? model.Commands : commandContainer.Commands;
         commands = commands.Where(x => !x.IsHidden).ToList();
@@ -499,7 +501,7 @@ public class HelpProvider : IHelpProvider
 
         var result = new List<IRenderable>
         {
-            NewComposer().LineBreak().Style(helpStyles?.Commands?.Header ?? Style.Plain, $"{resources.Commands}:")
+            NewComposer().LineBreak().Style(_helpStyles?.Commands?.Header ?? Style.Plain, $"{_resources.Commands}:")
                 .LineBreak(),
         };
 
@@ -510,12 +512,12 @@ public class HelpProvider : IHelpProvider
         foreach (var child in commands)
         {
             var arguments = NewComposer();
-            arguments.Style(helpStyles?.Commands?.ChildCommand ?? Style.Plain, child.Name);
+            arguments.Style(_helpStyles?.Commands?.ChildCommand ?? Style.Plain, child.Name);
             arguments.Space();
 
             foreach (var argument in HelpArgument.Get(child).Where(a => a.Required))
             {
-                arguments.Style(helpStyles?.Commands?.RequiredArgument ?? Style.Plain, $"<{argument.Name}>");
+                arguments.Style(_helpStyles?.Commands?.RequiredArgument ?? Style.Plain, $"<{argument.Name}>");
                 arguments.Space();
             }
 
@@ -576,11 +578,11 @@ public class HelpProvider : IHelpProvider
             composer.Text(" ");
             if (option.ValueIsOptional ?? false)
             {
-                composer.Style(helpStyles?.Options?.OptionalOptionValue ?? Style.Plain, $"[{option.Value}]");
+                composer.Style(_helpStyles?.Options?.OptionalOptionValue ?? Style.Plain, $"[{option.Value}]");
             }
             else
             {
-                composer.Style(helpStyles?.Options?.RequiredOptionValue ?? Style.Plain, $"<{option.Value}>");
+                composer.Style(_helpStyles?.Options?.RequiredOptionValue ?? Style.Plain, $"<{option.Value}>");
             }
         }
 
@@ -598,11 +600,11 @@ public class HelpProvider : IHelpProvider
                 ", ",
                 array.Cast<object>().Select(o =>
                     NewComposer().Style(
-                        helpStyles?.Options?.DefaultValue ?? Style.Plain,
+                        _helpStyles?.Options?.DefaultValue ?? Style.Plain,
                         o.ToString() ?? string.Empty))),
             _ => NewComposer().Style(
-                helpStyles?.Options?.DefaultValue ?? Style.Plain,
-                defaultValue?.ToString() ?? string.Empty),
+                _helpStyles?.Options?.DefaultValue ?? Style.Plain,
+                defaultValue.ToString() ?? string.Empty),
         };
     }
 

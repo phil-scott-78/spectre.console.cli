@@ -4,7 +4,7 @@ namespace Spectre.Console.Cli.Help;
 /// The help provider interface for Spectre.Console.
 /// </summary>
 /// <remarks>
-/// Implementations of this interface are responsbile
+/// Implementations of this interface are responsible
 /// for writing command help to the terminal when the
 /// `-h` or `--help` has been specified on the command line.
 /// </remarks>

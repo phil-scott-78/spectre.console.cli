@@ -7,7 +7,7 @@ internal sealed class Composer : IRenderable
     /// <summary>
     /// Whether to emit the markup styles, inline, when rendering the content.
     /// </summary>
-    private readonly bool _renderMarkup = false;
+    private readonly bool _renderMarkup;
 
     public Composer()
     {
@@ -81,20 +81,11 @@ internal sealed class Composer : IRenderable
 
     public Composer LineBreak()
     {
-        return LineBreaks(1);
-    }
-
-    public Composer LineBreaks(int count)
-    {
-        for (var i = 0; i < count; i++)
-        {
-            _content.Append(Environment.NewLine);
-        }
-
+        _content.Append(Environment.NewLine);
         return this;
     }
 
-    public Composer Join(string separator, IEnumerable<Composer> composers)
+    public Composer Join(string separator, IEnumerable<Composer>? composers)
     {
         if (composers != null)
         {

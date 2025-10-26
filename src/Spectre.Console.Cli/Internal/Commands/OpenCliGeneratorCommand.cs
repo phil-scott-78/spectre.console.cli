@@ -13,14 +13,15 @@ internal sealed class OpenCliGeneratorCommand : Command, IBuiltInCommand
         _model = model ?? throw new ArgumentNullException(nameof(model));
     }
 
-    public override int Execute(CommandContext context, CancellationToken cancellationToken)
+    protected override int Execute(CommandContext context, CancellationToken cancellationToken)
     {
         var document = new OpenCliDocument
         {
             OpenCli = "0.1-draft",
             Info = new OpenCliInfo
             {
-                Title = ((ICommandModel)_model).ApplicationName, Version = _model.ApplicationVersion ?? "1.0",
+                Title = ((ICommandModel)_model).ApplicationName,
+                Version = _model.ApplicationVersion ?? "1.0",
             },
             Commands = CreateCommands(_model.Commands),
             Arguments = CreateArguments(_model.DefaultCommand?.GetArguments()),
@@ -56,7 +57,7 @@ internal sealed class OpenCliGeneratorCommand : Command, IBuiltInCommand
                 Options = CreateOptions(command.GetOptions()),
                 Description = command.Description,
                 Hidden = command.IsHidden,
-                Examples = [..command.Examples.Select(example => string.Join(" ", example))],
+                Examples = [.. command.Examples.Select(example => string.Join(" ", example))],
             };
 
             // Skip branches without commands
@@ -169,7 +170,7 @@ internal sealed class OpenCliGeneratorCommand : Command, IBuiltInCommand
             {
                 Name = optionName,
                 Required = option.IsRequired,
-                Aliases = [..optionAliases.OrderBy(str => str)],
+                Aliases = [.. optionAliases.OrderBy(str => str)],
                 Arguments = arguments,
                 Description = option.Description,
                 Group = null,

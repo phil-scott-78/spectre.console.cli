@@ -1,7 +1,7 @@
 namespace Spectre.Console.Cli;
 
 /// <summary>
-/// Represents a user friendly frontend for a <see cref="ITypeRegistrar"/>.
+/// Represents a user-friendly frontend for a <see cref="ITypeRegistrar"/>.
 /// </summary>
 public interface ITypeRegistrarFrontend
 {

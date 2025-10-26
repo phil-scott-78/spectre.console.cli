@@ -3,15 +3,13 @@ namespace Spectre.Console.Cli;
 internal static class CliConstants
 {
     public const string DefaultCommandName = "__default_command";
-    public const string True = "true";
-    public const string False = "false";
     public const string DumpHelpOpenCliOption = "--help-dump-opencli";
 
-    public static string[] AcceptedBooleanValues { get; } = new string[]
-    {
-            True,
-            False,
-    };
+    public static string[] AcceptedBooleanValues { get; } =
+    [
+        "true",
+        "false"
+    ];
 
     public static class Commands
     {
