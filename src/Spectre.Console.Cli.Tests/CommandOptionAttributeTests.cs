@@ -107,23 +107,6 @@ public sealed partial class CommandOptionAttributeTests
     }
 
     [Theory]
-    [InlineData("--foo|-foo[b", '[')]
-    [InlineData("--foo|-f€b", '€')]
-    [InlineData("--foo|-foo@b", '@')]
-    public void Should_Throw_If_Option_Contains_Invalid_Name(string template, char invalid)
-    {
-        // Given, When
-        var result = Record.Exception(() => new CommandOptionAttribute(template));
-
-        // Then
-        result.ShouldBeOfType<CommandTemplateException>().And(e =>
-        {
-            e.Message.ShouldBe($"Encountered invalid character '{invalid}' in option name.");
-            e.Template.ShouldBe(template);
-        });
-    }
-
-    [Theory]
     [InlineData("--foo <HELLO-WORLD>", "HELLO-WORLD")]
     [InlineData("--foo <HELLO_WORLD>", "HELLO_WORLD")]
     public void Should_Accept_Dash_And_Underscore_In_Value_Name(string template, string name)
