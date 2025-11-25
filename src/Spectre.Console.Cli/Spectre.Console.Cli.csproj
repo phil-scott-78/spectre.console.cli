@@ -25,7 +25,9 @@
   </ItemGroup>
 
   <ItemGroup Label="Dependencies">
-    <PackageReference Include="OpenCli.Sources" />
+    <PackageReference Include="OpenCli.Sources">
+      <PrivateAssets>all</PrivateAssets>
+    <PackageReference>
     <PackageReference Include="Spectre.Console" />
     <PackageReference Include="Polyfill" Condition="'$(TargetFramework)' == 'netstandard2.0'">
       <PrivateAssets>all</PrivateAssets>
