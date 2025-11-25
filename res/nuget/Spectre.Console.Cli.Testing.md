@@ -1,4 +1,4 @@
-# `Spectre.Console.Cli`
+# `Spectre.Console.Cli.Testing`
 
 A .NET library that makes it easier to write unit tests for [Spectre.Console.Cli](https://github.com/spectreconsole/spectre.cli) applications.
 
