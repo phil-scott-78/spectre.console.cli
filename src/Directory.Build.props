@@ -41,13 +41,13 @@
     <Copyright>Patrik Svensson, Phil Scott, Nils Andresen, Cédric Luthi, Frank Ray</Copyright>
     <Authors>Patrik Svensson, Phil Scott, Nils Andresen, Cédric Luthi, Frank Ray</Authors>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/spectreconsole/spectre.cli</RepositoryUrl>
+    <RepositoryUrl>https://github.com/spectreconsole/spectre.console.cli</RepositoryUrl>
     <PackageIcon>logo.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageProjectUrl>https://github.com/spectreconsole/spectre.cli</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/spectreconsole/spectre.console.cli</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReleaseNotes>https://github.com/spectreconsole/spectre.cli/releases</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/spectreconsole/spectre.console.cli/releases</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Label="Source Link">

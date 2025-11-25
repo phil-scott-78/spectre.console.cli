@@ -9,10 +9,9 @@
     <File Path="../global.json" />
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
-    <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
   </Folder>
-  <Project Path="Spectre.Console.Cli.Testing\Spectre.Console.Cli.Testing.csproj" Type="Classic C#">
+  <Project Path="Spectre.Console.Cli.Testing\Spectre.Console.Cli.Testing.csproj" Type="C#">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
