@@ -86,7 +86,7 @@ public sealed partial class CommandAppTests
             {
                 "--var", "foo=bar",
                 "--var", "foo=qux",
-            }));
+            }, TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandConfigurationException>().And(ex =>
@@ -110,7 +110,7 @@ public sealed partial class CommandAppTests
             {
                 "--var", "foo=bar",
                 "--var", "foo=qux",
-            }));
+            }, TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandConfigurationException>().And(ex =>

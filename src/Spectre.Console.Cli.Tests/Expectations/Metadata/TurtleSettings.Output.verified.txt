@@ -1,0 +1,7 @@
+﻿{
+  Output: ,
+  Settings: {
+    Name: Lonely George,
+    IsAlive: false
+  }
+}

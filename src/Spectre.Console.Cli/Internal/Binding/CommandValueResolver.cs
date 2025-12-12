@@ -1,11 +1,13 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal static class CommandValueResolver
 {
-    public static CommandValueLookup GetParameterValues(CommandTree? tree, ITypeResolver resolver)
+    public static CommandValueLookup GetParameterValues(CommandTree? tree, ITypeResolver resolver, ICommandMetadataContext metadataContext)
     {
         var lookup = new CommandValueLookup();
-        var binder = new CommandValueBinder(lookup);
+        var binder = new CommandValueBinder(lookup, metadataContext);
 
         CommandValidator.ValidateRequiredParameters(tree);
 
@@ -20,7 +22,7 @@ internal static class CommandValueResolver
                     var context = new CommandParameterContext(parameter, resolver, null);
                     if (parameter.ValueProvider.TryGetValue(context, out var result))
                     {
-                        result = ConvertValue(resolver, lookup, binder, parameter, result);
+                        result = ConvertValue(metadataContext, resolver, lookup, binder, parameter, result);
 
                         lookup.SetValue(parameter, result);
                         CommandValidator.ValidateParameter(parameter, lookup, resolver);
@@ -28,10 +30,16 @@ internal static class CommandValueResolver
                     }
                 }
 
-                if (parameter.IsFlagValue())
+                if (parameter.IsFlagValue)
                 {
                     // Set the flag value to an empty, not set instance.
-                    var instance = Activator.CreateInstance(parameter.ParameterType);
+                    var genericArgs = parameter.ParameterType.GetGenericArguments();
+                    if (genericArgs.Length == 0)
+                    {
+                        throw new InvalidOperationException("Could not determine flag value type.");
+                    }
+
+                    var instance = metadataContext.CreateFlagValue(genericArgs[0]);
                     lookup.SetValue(parameter, instance);
                 }
                 else
@@ -40,7 +48,7 @@ internal static class CommandValueResolver
                     if (parameter.DefaultValue != null)
                     {
                         var value = parameter.DefaultValue?.Value;
-                        value = ConvertValue(resolver, lookup, binder, parameter, value);
+                        value = ConvertValue(metadataContext, resolver, lookup, binder, parameter, value);
 
                         binder.Bind(parameter, resolver, value);
                         CommandValidator.ValidateParameter(parameter, lookup, resolver);
@@ -63,7 +71,7 @@ internal static class CommandValueResolver
                 }
                 else
                 {
-                    if (mapped.Parameter.IsFlagValue() && mapped.Value == null)
+                    if (mapped.Parameter.IsFlagValue && mapped.Value == null)
                     {
                         if (mapped.Parameter is CommandOption { DefaultValue: not null } option)
                         {
@@ -79,7 +87,7 @@ internal static class CommandValueResolver
                     else
                     {
                         object? value;
-                        var converter = GetConverter(lookup, binder, resolver, mapped.Parameter);
+                        var converter = GetConverter(metadataContext, lookup, binder, resolver, mapped.Parameter);
                         var mappedValue = mapped.Value ?? string.Empty;
                         try
                         {
@@ -114,11 +122,17 @@ internal static class CommandValueResolver
         return lookup;
     }
 
-    private static object? ConvertValue(ITypeResolver resolver, CommandValueLookup lookup, CommandValueBinder binder, CommandParameter parameter, object? result)
+    private static object? ConvertValue(
+        ICommandMetadataContext metadataContext,
+        ITypeResolver resolver,
+        CommandValueLookup lookup,
+        CommandValueBinder binder,
+        CommandParameter parameter,
+        object? result)
     {
         if (result != null && result.GetType() != parameter.ParameterType)
         {
-            var converter = GetConverter(lookup, binder, resolver, parameter);
+            var converter = GetConverter(metadataContext, lookup, binder, resolver, parameter);
             result = result is Array array ? ConvertArray(array, converter) : converter.ConvertFrom(result);
         }
 
@@ -146,7 +160,12 @@ internal static class CommandValueResolver
     }
 
     [SuppressMessage("Style", "IDE0019:Use pattern matching", Justification = "It's OK")]
-    private static SmartConverter GetConverter(CommandValueLookup lookup, CommandValueBinder binder, ITypeResolver resolver, CommandParameter parameter)
+    private static SmartConverter GetConverter(
+        ICommandMetadataContext metadataContext,
+        CommandValueLookup lookup,
+        CommandValueBinder binder,
+        ITypeResolver resolver,
+        CommandParameter parameter)
     {
         if (parameter.Converter == null)
         {
@@ -159,10 +178,10 @@ internal static class CommandValueResolver
                     throw new InvalidOperationException("Could not get element type");
                 }
 
-                return new SmartConverter(TypeDescriptor.GetConverter(elementType), elementType);
+                return new SmartConverter(metadataContext, metadataContext.GetTypeConverter(elementType), elementType);
             }
 
-            if (parameter.IsFlagValue())
+            if (parameter.IsFlagValue)
             {
                 // Is the optional value instantiated?
                 var value = lookup.GetValue(parameter) as IFlagValue;
@@ -179,10 +198,10 @@ internal static class CommandValueResolver
                 }
 
                 // Return a converter for the flag element type.
-                return new SmartConverter(TypeDescriptor.GetConverter(value.Type), value.Type);
+                return new SmartConverter(metadataContext, metadataContext.GetTypeConverter(value.Type), value.Type);
             }
 
-            return new SmartConverter(TypeDescriptor.GetConverter(parameter.ParameterType), parameter.ParameterType);
+            return new SmartConverter(metadataContext, metadataContext.GetTypeConverter(parameter.ParameterType), parameter.ParameterType);
         }
 
         var type = Type.GetType(parameter.Converter.ConverterTypeName);
@@ -191,7 +210,7 @@ internal static class CommandValueResolver
             throw CommandRuntimeException.NoConverterFound(parameter);
         }
 
-        return new SmartConverter(typeConverter, type);
+        return new SmartConverter(metadataContext, typeConverter, type);
     }
 
     /// <summary>
@@ -199,13 +218,17 @@ internal static class CommandValueResolver
     /// </summary>
     private readonly ref struct SmartConverter
     {
-        public SmartConverter(TypeConverter typeConverter, Type type)
+        private readonly ICommandMetadataContext _metadataContext;
+
+        public SmartConverter(ICommandMetadataContext metadataContext, TypeConverter typeConverter, Type type)
         {
+            _metadataContext = metadataContext;
             TypeConverter = typeConverter;
             Type = type;
         }
 
         public TypeConverter TypeConverter { get; }
+
         private Type Type { get; }
 
         public object? ConvertFrom(object input)
@@ -216,14 +239,14 @@ internal static class CommandValueResolver
             }
             catch (NotSupportedException)
             {
-                var constructor = Type.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, [input.GetType()
-                ], null);
-                if (constructor == null)
+                // Try constructor-based fallback via metadata context
+                var result = _metadataContext.ConvertWithConstructorFallback(Type, input);
+                if (result != null)
                 {
-                    throw;
+                    return result;
                 }
 
-                return constructor.Invoke([input]);
+                throw;
             }
         }
     }

@@ -16,7 +16,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = await app.RunAsync();
+            var result = await app.RunAsync(cancellationToken: TestContext.Current.CancellationToken);
 
             // Then
             result.ExitCode.ShouldBe(0);
@@ -35,7 +35,7 @@ public sealed partial class CommandAppTests
                         {
                         "--ThrowException",
                         "true",
-                        });
+                        }, TestContext.Current.CancellationToken);
 
             // Then
             result.ExitCode.ShouldBe(-1);
@@ -58,7 +58,7 @@ public sealed partial class CommandAppTests
                         {
                         "--ThrowException",
                         "true",
-                        }));
+                        }, TestContext.Current.CancellationToken));
 
             // Then
             exception.ShouldBeOfType<Exception>().And(ex =>

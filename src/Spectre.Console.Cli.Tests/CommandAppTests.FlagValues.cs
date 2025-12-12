@@ -4,29 +4,25 @@ public sealed partial class CommandAppTests
 {
     public sealed class FlagValues
     {
-        [SuppressMessage("Performance", "CA1812", Justification = "It's OK")]
-        private sealed class FlagSettings : CommandSettings
+        internal sealed class FlagSettings : CommandSettings
         {
             [CommandOption("--serve [PORT]")]
             public FlagValue<int>? Serve { get; set; }
         }
 
-        [SuppressMessage("Performance", "CA1812", Justification = "It's OK")]
-        private sealed class FlagSettingsWithNullableValueType : CommandSettings
+        internal sealed class FlagSettingsWithNullableValueType : CommandSettings
         {
             [CommandOption("--serve [PORT]")]
             public FlagValue<int?>? Serve { get; set; }
         }
 
-        [SuppressMessage("Performance", "CA1812", Justification = "It's OK")]
-        private sealed class FlagSettingsWithOptionalOptionButNoFlagValue : CommandSettings
+        internal sealed class FlagSettingsWithOptionalOptionButNoFlagValue : CommandSettings
         {
             [CommandOption("--serve [PORT]")]
             public int Serve { get; set; }
         }
 
-        [SuppressMessage("Performance", "CA1812", Justification = "It's OK")]
-        private sealed class FlagSettingsWithDefaultValue : CommandSettings
+        internal sealed class FlagSettingsWithDefaultValue : CommandSettings
         {
             [CommandOption("--serve [PORT]")]
             [DefaultValue(987)]
@@ -45,7 +41,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = Record.Exception(() => app.Run(new[] { "foo", "--serve", "123" }));
+            var result = Record.Exception(() => app.Run(new[] { "foo", "--serve", "123" }, TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandConfigurationException>().And(ex =>

@@ -46,14 +46,44 @@ Task("Test")
     {
         Configuration = configuration,
         Verbosity = DotNetVerbosity.Minimal,
-        NoLogo = true,
+        PathType = DotNetTestPathType.Project,
         NoRestore = true,
         NoBuild = true,
+
     });
 });
 
-Task("Package")
+Task("Test-SourceGenerator")
     .IsDependentOn("Test")
+    .Does(context =>
+{
+    var projectPath = "./src/Spectre.Console.Cli.SourceGenerator.Tests/Spectre.Console.Cli.SourceGenerator.Tests.csproj";
+    var publishDir = "./.artifacts/sourcegen-tests";
+
+    DotNetPublish(projectPath, new DotNetPublishSettings
+    {
+        Configuration = configuration,
+        OutputDirectory = publishDir,
+        Verbosity = DotNetVerbosity.Minimal,
+        Framework = "net10.0",
+        NoLogo = true,
+    });
+
+    var exeName = context.IsRunningOnWindows()
+        ? "Spectre.Console.Cli.SourceGenerator.Tests.exe"
+        : "Spectre.Console.Cli.SourceGenerator.Tests";
+
+    var exePath = System.IO.Path.Combine(publishDir, exeName);
+
+    var exitCode = StartProcess(exePath);
+    if (exitCode != 0)
+    {
+        throw new CakeException($"Source generator tests failed with exit code {exitCode}");
+    }
+});
+
+Task("Package")
+    .IsDependentOn("Test-SourceGenerator")
     .Does(context =>
 {
     context.DotNetPack($"./src/Spectre.Console.Cli.slnx", new DotNetPackSettings

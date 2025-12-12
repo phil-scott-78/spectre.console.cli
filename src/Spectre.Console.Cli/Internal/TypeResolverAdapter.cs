@@ -1,12 +1,16 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal sealed class TypeResolverAdapter : ITypeResolver, IDisposable
 {
     private readonly ITypeResolver? _resolver;
+    private readonly ICommandMetadataContext _metadataContext;
 
-    public TypeResolverAdapter(ITypeResolver? resolver)
+    public TypeResolverAdapter(ITypeResolver? resolver, ICommandMetadataContext metadataContext)
     {
         _resolver = resolver;
+        _metadataContext = metadataContext;
     }
 
     public object? Resolve(Type? type)
@@ -24,8 +28,8 @@ internal sealed class TypeResolverAdapter : ITypeResolver, IDisposable
                 return obj;
             }
 
-            // Fall back to use the activator.
-            return Activator.CreateInstance(type);
+            // Fall back to use the metadata context for activation
+            return _metadataContext.CreateInstance(type);
         }
         catch (CommandAppException)
         {

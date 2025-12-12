@@ -17,7 +17,7 @@ public interface IConfigurator
     /// </summary>
     /// <typeparam name="T">The type of the help provider to instantiate at runtime and use.</typeparam>
     /// <returns>A configurator that can be used for further configuration.</returns>
-    public IConfigurator SetHelpProvider<T>()
+    public IConfigurator SetHelpProvider<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>()
         where T : IHelpProvider;
 
     /// <summary>

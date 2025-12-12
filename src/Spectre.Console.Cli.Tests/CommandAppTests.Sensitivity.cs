@@ -19,7 +19,7 @@ public sealed partial class CommandAppTests
         var result = Record.Exception(() => app.Run(new[]
         {
             "Command", "--foo", "bar",
-        }));
+        }, TestContext.Current.CancellationToken));
 
         // Then
         result.ShouldNotBeNull();
@@ -46,7 +46,7 @@ public sealed partial class CommandAppTests
         var result = Record.Exception(() => app.Run(new[]
         {
             "command", "--Foo", "bar",
-        }));
+        }, TestContext.Current.CancellationToken));
 
         // Then
         result.ShouldNotBeNull();
@@ -72,7 +72,7 @@ public sealed partial class CommandAppTests
         var result = Record.Exception(() => app.Run(new[]
         {
             "command", "-F", "bar",
-        }));
+        }, TestContext.Current.CancellationToken));
 
         // Then
         result.ShouldNotBeNull();

@@ -11,7 +11,7 @@
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
   </Folder>
-  <Project Path="Spectre.Console.Cli.Testing\Spectre.Console.Cli.Testing.csproj" Type="C#">
+  <Project Path="Spectre.Console.Cli.Testing\Spectre.Console.Cli.Testing.csproj">
     <Configuration Solution="Debug|x64" Project="Debug|Any CPU" />
     <Configuration Solution="Debug|x86" Project="Debug|Any CPU" />
     <Configuration Solution="Release|x64" Project="Release|Any CPU" />
@@ -19,4 +19,7 @@
   </Project>
   <Project Path="Spectre.Console.Cli.Tests/Spectre.Console.Cli.Tests.csproj" />
   <Project Path="Spectre.Console.Cli/Spectre.Console.Cli.csproj" />
+  <Project Path="ConsoleApp1/ConsoleApp1.csproj" />
+  <Project Path="Spectre.Console.Cli.SourceGenerator.Tests/Spectre.Console.Cli.SourceGenerator.Tests.csproj" />
+  <Project Path="Spectre.Console.Cli.SourceGenerator/Spectre.Console.Cli.SourceGenerator.csproj" />
 </Solution>

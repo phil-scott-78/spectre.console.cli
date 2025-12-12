@@ -1,0 +1,16 @@
+﻿{
+  Output: ,
+  Settings: {
+    Teeth: 4,
+    HuntDays: [
+      Monday,
+      Thursday
+    ],
+    Weight: {
+      IsSet: false
+    },
+    Name: Simba,
+    IsAlive: false,
+    Legs: 28
+  }
+}

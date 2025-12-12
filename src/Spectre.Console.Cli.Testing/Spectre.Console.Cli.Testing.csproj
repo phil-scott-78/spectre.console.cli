@@ -13,6 +13,10 @@
 
     <ItemGroup>
       <PackageReference Include="Spectre.Console.Testing" />
+      <PackageReference Include="Polyfill" Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
 
 </Project>

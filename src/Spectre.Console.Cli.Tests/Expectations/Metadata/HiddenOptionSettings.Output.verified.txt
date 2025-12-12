@@ -1,0 +1,8 @@
+﻿{
+  Output: ,
+  Settings: {
+    Foo: 42,
+    Bar: 5,
+    Baz: 10
+  }
+}

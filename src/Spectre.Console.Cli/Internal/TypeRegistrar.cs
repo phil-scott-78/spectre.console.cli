@@ -9,18 +9,15 @@ internal sealed class TypeRegistrar : ITypeRegistrarFrontend
         _registrar = registrar ?? throw new ArgumentNullException(nameof(registrar));
     }
 
-    public void Register<TService, TImplementation>()
+    public void Register<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
         where TImplementation : TService
     {
-        _registrar.Register(typeof(TService), typeof(TImplementation));
+        _registrar.Register<TService, TImplementation>();
     }
 
     public void RegisterInstance<TImplementation>(TImplementation instance)
     {
-        if (instance == null)
-        {
-            throw new ArgumentNullException(nameof(instance));
-        }
+        ArgumentNullException.ThrowIfNull(instance);
 
         _registrar.RegisterInstance(typeof(TImplementation), instance);
     }
@@ -28,10 +25,7 @@ internal sealed class TypeRegistrar : ITypeRegistrarFrontend
     public void RegisterInstance<TService, TImplementation>(TImplementation instance)
         where TImplementation : TService
     {
-        if (instance == null)
-        {
-            throw new ArgumentNullException(nameof(instance));
-        }
+        ArgumentNullException.ThrowIfNull(instance);
 
         _registrar.RegisterInstance(typeof(TService), instance);
     }

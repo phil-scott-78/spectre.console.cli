@@ -1,0 +1,10 @@
+﻿{
+  Output: ,
+  Settings: {
+    Qux: 1,
+    Corgi: 5,
+    Bar: 3,
+    Baz: 4,
+    Foo: 2
+  }
+}

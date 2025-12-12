@@ -177,13 +177,13 @@ internal sealed class ExplainCommand : Command<ExplainCommand.Settings>, IBuiltI
         if (!detailed)
         {
             parametersNode.AddNode(
-                $"{parameter.PropertyName} [purple]{GetShortOptions(parameter)}[/] [grey]{parameter.Property.PropertyType.ToString().EscapeMarkup()}[/]");
+                $"{parameter.PropertyName} [purple]{GetShortOptions(parameter)}[/] [grey]{parameter.Accessor.PropertyType.ToString().EscapeMarkup()}[/]");
 
             return;
         }
 
         var parameterNode = parametersNode.AddNode(
-            $"{parameter.PropertyName} [grey]{parameter.Property.PropertyType.ToString().EscapeMarkup()}[/]");
+            $"{parameter.PropertyName} [grey]{parameter.Accessor.PropertyType.ToString().EscapeMarkup()}[/]");
 
         parameterNode.AddNode(ValueMarkup("Description", parameter.Description, "no description"));
         parameterNode.AddNode(ValueMarkup("Parameter Kind", parameter.ParameterKind.ToString()));

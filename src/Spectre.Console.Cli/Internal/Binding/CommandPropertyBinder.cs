@@ -1,16 +1,31 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal static class CommandPropertyBinder
 {
-    public static CommandSettings CreateSettings(CommandValueLookup lookup, Type settingsType, ITypeResolver resolver)
+    public static CommandSettings CreateSettings(CommandValueLookup lookup, Type settingsType, ITypeResolver resolver, ICommandMetadataContext metadataContext)
     {
-        var settings = CreateSettings(resolver, settingsType);
+        // First try to resolve from DI container
+        if (resolver.Resolve(settingsType) is CommandSettings resolvedSettings)
+        {
+            SetProperties(lookup, resolvedSettings);
+            return resolvedSettings;
+        }
 
+        // Fall back to metadata context creation
+        var settings = metadataContext.CreateSettings(settingsType);
+        SetProperties(lookup, settings);
+        return settings;
+    }
+
+    private static void SetProperties(CommandValueLookup lookup, CommandSettings settings)
+    {
         foreach (var (parameter, value) in lookup)
         {
             if (value != null)
             {
-                parameter.Property.SetValue(settings, value);
+                parameter.Accessor.SetValue(settings, value);
             }
         }
 
@@ -20,22 +35,5 @@ internal static class CommandPropertyBinder
         {
             throw CommandRuntimeException.ValidationFailed(validationResult);
         }
-
-        return settings;
-    }
-
-    private static CommandSettings CreateSettings(ITypeResolver resolver, Type settingsType)
-    {
-        if (resolver.Resolve(settingsType) is CommandSettings settings)
-        {
-            return settings;
-        }
-
-        if (Activator.CreateInstance(settingsType) is CommandSettings instance)
-        {
-            return instance;
-        }
-
-        throw CommandParseException.CouldNotCreateSettings(settingsType);
     }
 }

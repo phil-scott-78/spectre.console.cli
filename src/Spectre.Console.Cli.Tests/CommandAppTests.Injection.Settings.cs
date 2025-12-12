@@ -69,6 +69,34 @@ public sealed partial class CommandAppTests
                 {
                     _services.AddSingleton(service, provider => func());
                 }
+
+                public void Register<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+                    where TImplementation : TService
+                {
+                    _services.AddSingleton(typeof(TService), typeof(TImplementation));
+                }
+
+                public void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+                    where TImplementation : class
+                {
+                    _services.AddSingleton(typeof(TImplementation), typeof(TImplementation));
+                }
+
+                public void RegisterInstance<TService>(TService implementation)
+                    where TService : class
+                {
+                    ArgumentNullException.ThrowIfNull(implementation);
+
+                    _services.AddSingleton(typeof(TService), implementation);
+                }
+
+                public void RegisterLazy<TService>(Func<TService> factory)
+                    where TService : class
+                {
+                    ArgumentNullException.ThrowIfNull(factory);
+
+                    _services.AddSingleton(typeof(TService), provider => factory());
+                }
             }
 
             public sealed class CustomTypeResolver : ITypeResolver

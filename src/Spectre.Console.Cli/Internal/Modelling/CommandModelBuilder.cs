@@ -1,3 +1,5 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal static class CommandModelBuilder
@@ -7,9 +9,9 @@ internal static class CommandModelBuilder
     {
         public int Level { get; }
         public int SortOrder { get; }
-        public PropertyInfo[] Properties { get; }
+        public IPropertyAccessor[] Properties { get; }
 
-        public OrderedProperties(int level, int sortOrder, PropertyInfo[] properties)
+        public OrderedProperties(int level, int sortOrder, IPropertyAccessor[] properties)
         {
             Level = level;
             SortOrder = sortOrder;
@@ -17,12 +19,12 @@ internal static class CommandModelBuilder
         }
     }
 
-    public static CommandModel Build(IConfiguration configuration)
+    public static CommandModel Build(IConfiguration configuration, ICommandMetadataContext metadataContext)
     {
         var result = new List<CommandInfo>();
         foreach (var command in configuration.Commands)
         {
-            result.Add(Build(null, command));
+            result.Add(Build(null, command, metadataContext));
         }
 
         if (configuration.DefaultCommand != null)
@@ -31,7 +33,7 @@ internal static class CommandModelBuilder
             configuration.DefaultCommand.Examples.AddRange(configuration.Examples);
 
             // Build the default command.
-            var defaultCommand = Build(null, configuration.DefaultCommand);
+            var defaultCommand = Build(null, configuration.DefaultCommand, metadataContext);
 
             result.Add(defaultCommand);
         }
@@ -43,18 +45,18 @@ internal static class CommandModelBuilder
         return model;
     }
 
-    private static CommandInfo Build(CommandInfo? parent, ConfiguredCommand command)
+    private static CommandInfo Build(CommandInfo? parent, ConfiguredCommand command, ICommandMetadataContext metadataContext)
     {
-        var info = new CommandInfo(parent, command);
+        var info = new CommandInfo(parent, command, metadataContext);
 
-        foreach (var parameter in GetParameters(info))
+        foreach (var parameter in GetParameters(info, metadataContext))
         {
             info.Parameters.Add(parameter);
         }
 
         foreach (var childCommand in command.Children)
         {
-            var child = Build(info, childCommand);
+            var child = Build(info, childCommand, metadataContext);
             info.Children.Add(child);
         }
 
@@ -70,7 +72,7 @@ internal static class CommandModelBuilder
         return info;
     }
 
-    private static IEnumerable<CommandParameter> GetParameters(CommandInfo command)
+    private static IEnumerable<CommandParameter> GetParameters(CommandInfo command, ICommandMetadataContext metadataContext)
     {
         var result = new List<CommandParameter>();
         var argumentPosition = 0;
@@ -85,7 +87,11 @@ internal static class CommandModelBuilder
             var sortOrder = 0;
             while (current.BaseType != null)
             {
-                yield return new OrderedProperties(level, sortOrder, current.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public));
+                var metadata = metadataContext.GetSettingsMetadata(current);
+                var declaredProperties = metadata.Properties
+                    .Where(p => p.DeclaringType == current)
+                    .ToArray();
+                yield return new OrderedProperties(level, sortOrder, declaredProperties);
                 current = current.BaseType;
 
                 // Things get a little bit complicated now.
@@ -113,45 +119,37 @@ internal static class CommandModelBuilder
         {
             var parameters = new List<CommandParameter>();
 
-            foreach (var property in group.Properties)
+            foreach (var accessor in group.Properties)
             {
-                if (property.IsDefined(typeof(CommandOptionAttribute)))
+                if (accessor.OptionAttribute != null)
                 {
-                    var attribute = property.GetCustomAttribute<CommandOptionAttribute>();
-                    if (attribute != null)
-                    {
-                        var option = BuildOptionParameter(property, attribute);
+                    var option = BuildOptionParameter(accessor);
 
-                        // Any previous command has this option defined?
-                        if (command.HaveParentWithOption(option))
+                    // Any previous command has this option defined?
+                    if (command.HaveParentWithOption(option))
+                    {
+                        // Do we allow it to exist on this command as well?
+                        if (command.AllowParentOption(option))
                         {
-                            // Do we allow it to exist on this command as well?
-                            if (command.AllowParentOption(option))
-                            {
-                                option.IsShadowed = true;
-                                parameters.Add(option);
-                            }
-                        }
-                        else
-                        {
-                            // No parent have this option.
+                            option.IsShadowed = true;
                             parameters.Add(option);
                         }
                     }
-                }
-                else if (property.IsDefined(typeof(CommandArgumentAttribute)))
-                {
-                    var attribute = property.GetCustomAttribute<CommandArgumentAttribute>();
-                    if (attribute != null)
+                    else
                     {
-                        var argument = BuildArgumentParameter(property, attribute);
+                        // No parent have this option.
+                        parameters.Add(option);
+                    }
+                }
+                else if (accessor.ArgumentAttribute != null)
+                {
+                    var argument = BuildArgumentParameter(accessor);
 
-                        // Any previous command has this argument defined?
-                        // In that case, we should not assign the parameter to this command.
-                        if (!command.HaveParentWithArgument(argument))
-                        {
-                            parameters.Add(argument);
-                        }
+                    // Any previous command has this argument defined?
+                    // In that case, we should not assign the parameter to this command.
+                    if (!command.HaveParentWithArgument(argument))
+                    {
+                        parameters.Add(argument);
                     }
                 }
             }
@@ -172,40 +170,42 @@ internal static class CommandModelBuilder
         return result;
     }
 
-    private static CommandOption BuildOptionParameter(PropertyInfo property, CommandOptionAttribute attribute)
+    private static CommandOption BuildOptionParameter(IPropertyAccessor accessor)
     {
-        var description = property.GetCustomAttribute<DescriptionAttribute>();
-        var converter = property.GetCustomAttribute<TypeConverterAttribute>();
-        var deconstructor = property.GetCustomAttribute<PairDeconstructorAttribute>();
-        var valueProvider = property.GetCustomAttribute<ParameterValueProviderAttribute>();
-        var validators = property.GetCustomAttributes<ParameterValidationAttribute>(true);
-        var defaultValue = property.GetCustomAttribute<DefaultValueAttribute>();
+        var attribute = accessor.OptionAttribute!;
+        var description = accessor.DescriptionAttribute;
+        var converter = accessor.ConverterAttribute;
+        var deconstructor = accessor.PairDeconstructorAttribute;
+        var valueProvider = accessor.ValueProviderAttribute;
+        var validators = accessor.ValidationAttributes;
+        var defaultValue = accessor.DefaultValueAttribute;
 
-        var kind = GetOptionKind(property.PropertyType, attribute, deconstructor, converter);
+        var kind = GetOptionKind(accessor.PropertyType, attribute, deconstructor, converter);
 
-        if (defaultValue == null && property.PropertyType == typeof(bool))
+        if (defaultValue == null && accessor.PropertyType == typeof(bool))
         {
             defaultValue = new DefaultValueAttribute(false);
         }
 
-        return new CommandOption(property.PropertyType, kind,
-            property, description?.Description, converter, deconstructor,
+        return new CommandOption(accessor.PropertyType, kind,
+            accessor, description?.Description, converter, deconstructor,
             attribute, valueProvider, validators, defaultValue,
             attribute.ValueIsOptional);
     }
 
-    private static CommandArgument BuildArgumentParameter(PropertyInfo property, CommandArgumentAttribute attribute)
+    private static CommandArgument BuildArgumentParameter(IPropertyAccessor accessor)
     {
-        var description = property.GetCustomAttribute<DescriptionAttribute>();
-        var converter = property.GetCustomAttribute<TypeConverterAttribute>();
-        var defaultValue = property.GetCustomAttribute<DefaultValueAttribute>();
-        var valueProvider = property.GetCustomAttribute<ParameterValueProviderAttribute>();
-        var validators = property.GetCustomAttributes<ParameterValidationAttribute>(true);
+        var attribute = accessor.ArgumentAttribute!;
+        var description = accessor.DescriptionAttribute;
+        var converter = accessor.ConverterAttribute;
+        var defaultValue = accessor.DefaultValueAttribute;
+        var valueProvider = accessor.ValueProviderAttribute;
+        var validators = accessor.ValidationAttributes;
 
-        var kind = GetParameterKind(property.PropertyType);
+        var kind = GetParameterKind(accessor.PropertyType);
 
         return new CommandArgument(
-            property.PropertyType, kind, property,
+            accessor.PropertyType, kind, accessor,
             description?.Description, converter,
             defaultValue, attribute, valueProvider,
             validators);

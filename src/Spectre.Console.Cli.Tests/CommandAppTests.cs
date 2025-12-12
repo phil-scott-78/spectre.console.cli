@@ -300,7 +300,7 @@ public sealed partial class CommandAppTests
         });
 
         // When
-        var result = Record.Exception(() => app.Run(new[] { "a", "0", "12" }));
+        var result = Record.Exception(() => app.Run(new[] { "a", "0", "12" }, TestContext.Current.CancellationToken));
 
         // Then
         result.ShouldBeOfType<CommandConfigurationException>().And(ex =>
@@ -480,7 +480,7 @@ public sealed partial class CommandAppTests
         });
 
         // When
-        var result = Record.Exception(() => app.Run(new[] { "dog", "4", "12" }));
+        var result = Record.Exception(() => app.Run(new[] { "dog", "4", "12" }, TestContext.Current.CancellationToken));
 
         // Then
         result.ShouldBeOfType<CommandConfigurationException>().And(ex =>
@@ -510,7 +510,7 @@ public sealed partial class CommandAppTests
         app.Run(new[]
         {
             "animal", "4", "dog", "12",
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Then
         registrar.Registrations.ContainsKey(typeof(GenericCommand<FooCommandSettings>)).ShouldBeTrue();
@@ -536,7 +536,7 @@ public sealed partial class CommandAppTests
         app.Run(new[]
         {
             "12", "4",
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Then
         registrar.Registrations.ContainsKey(typeof(DogCommand)).ShouldBeTrue();
@@ -559,7 +559,7 @@ public sealed partial class CommandAppTests
         app.Run(new[]
         {
             "12", "4",
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Then
         registrar.Registrations.ContainsKey(typeof(DogSettings)).ShouldBeTrue();
@@ -589,7 +589,7 @@ public sealed partial class CommandAppTests
         app.Run(new[]
         {
             "animal", "4", "dog", "12",
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Then
         registrar.Registrations.ContainsKey(typeof(DogSettings)).ShouldBeTrue();
@@ -817,7 +817,7 @@ public sealed partial class CommandAppTests
         });
 
         // When
-        var result = Record.Exception(() => app.Run(new[] { "dog", "--foo" }));
+        var result = Record.Exception(() => app.Run(new[] { "dog", "--foo" }, TestContext.Current.CancellationToken));
 
         // Then
         result.ShouldBeOfType<CommandParseException>().And(ex =>
@@ -1066,6 +1066,7 @@ public sealed partial class CommandAppTests
             });
 
             // Then
+            result.Output.ShouldBeEmpty();
             result.ExitCode.ShouldBe(0);
             result.Settings.ShouldBeOfType<DogSettings>().And(dog =>
             {
@@ -1135,7 +1136,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = app.Run(new[] { "foo", "4", "12" });
+            var result = app.Run(new[] { "foo", "4", "12" }, TestContext.Current.CancellationToken);
 
             // Then
             result.ShouldBe(1);
@@ -1207,7 +1208,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = await app.RunAsync(["foo", "4", "12"]);
+            var result = await app.RunAsync(["foo", "4", "12"], TestContext.Current.CancellationToken);
 
             // Then
             result.ShouldBe(1);
@@ -1241,7 +1242,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = app.Run(new[] { "foo", "4", "bar", "12" });
+            var result = app.Run(new[] { "foo", "4", "bar", "12" }, TestContext.Current.CancellationToken);
 
             // Then
             result.ShouldBe(1);
@@ -1275,7 +1276,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = await app.RunAsync(["foo", "4", "bar", "12"]);
+            var result = await app.RunAsync(["foo", "4", "bar", "12"], TestContext.Current.CancellationToken);
 
             // Then
             result.ShouldBe(1);

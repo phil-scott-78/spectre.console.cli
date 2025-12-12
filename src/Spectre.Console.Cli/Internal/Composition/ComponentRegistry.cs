@@ -9,17 +9,6 @@ internal sealed class ComponentRegistry : IDisposable
         _registrations = new Dictionary<Type, HashSet<ComponentRegistration>>();
     }
 
-    public ComponentRegistry CreateCopy()
-    {
-        var registry = new ComponentRegistry();
-        foreach (var registration in _registrations.SelectMany(p => p.Value))
-        {
-            registry.Register(registration.CreateCopy());
-        }
-
-        return registry;
-    }
-
     public void Dispose()
     {
         foreach (var registration in _registrations)

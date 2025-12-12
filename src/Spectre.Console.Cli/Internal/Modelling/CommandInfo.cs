@@ -1,3 +1,5 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal sealed class CommandInfo : ICommandContainer, ICommandInfo
@@ -28,7 +30,7 @@ internal sealed class CommandInfo : ICommandContainer, ICommandInfo
     ICommandInfo? ICommandInfo.Parent => Parent;
     IReadOnlyList<string[]> Help.ICommandContainer.Examples => (IReadOnlyList<string[]>)Examples;
 
-    public CommandInfo(CommandInfo? parent, ConfiguredCommand prototype)
+    public CommandInfo(CommandInfo? parent, ConfiguredCommand prototype, ICommandMetadataContext metadataContext)
     {
         Parent = parent;
 
@@ -48,7 +50,8 @@ internal sealed class CommandInfo : ICommandContainer, ICommandInfo
 
         if (CommandType != null && string.IsNullOrWhiteSpace(Description))
         {
-            var description = CommandType.GetCustomAttribute<DescriptionAttribute>();
+            var commandMetadata = metadataContext.GetCommandTypeMetadata(CommandType);
+            var description = commandMetadata?.DescriptionAttribute;
             if (description != null)
             {
                 Description = description.Description;

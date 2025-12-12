@@ -1,3 +1,5 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal sealed class ConfiguredCommand
@@ -47,10 +49,11 @@ internal sealed class ConfiguredCommand
         return new ConfiguredCommand(name, null, typeof(TSettings), null, false);
     }
 
-    public static ConfiguredCommand FromType<TCommand>(string name, bool isDefaultCommand = false)
+    public static ConfiguredCommand FromType<TCommand>(
+        ICommandMetadataContext metadataContext, string name, bool isDefaultCommand = false)
         where TCommand : class, ICommand
     {
-        var settingsType = ConfigurationHelper.GetSettingsType(typeof(TCommand));
+        var settingsType = metadataContext.GetSettingsTypeForCommand(typeof(TCommand));
         if (settingsType == null)
         {
             throw CommandRuntimeException.CouldNotGetSettingsType(typeof(TCommand));

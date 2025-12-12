@@ -1,17 +1,18 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal static class CommandConstructorBinder
 {
-    public static CommandSettings CreateSettings(CommandValueLookup lookup, ConstructorInfo constructor, ITypeResolver resolver)
+    public static CommandSettings CreateSettings(
+        CommandValueLookup lookup,
+        IConstructorMetadata constructor,
+        ITypeResolver resolver,
+        Dictionary<Type, object>? resolutionCache = null)
     {
-        if (constructor.DeclaringType == null)
-        {
-            throw new InvalidOperationException("Cannot create settings since constructor have no declaring type.");
-        }
-
         var parameters = new List<object?>();
         var mapped = new HashSet<Guid>();
-        foreach (var parameter in constructor.GetParameters())
+        foreach (var parameter in constructor.Parameters)
         {
             if (lookup.TryGetParameterWithName(parameter.Name, out var result))
             {
@@ -20,18 +21,33 @@ internal static class CommandConstructorBinder
             }
             else
             {
-                var value = resolver.Resolve(parameter.ParameterType);
-                if (value == null)
+                // First check the resolution cache to reuse previously resolved instances
+                // This avoids instantiating transient services multiple times
+                if (resolutionCache != null && resolutionCache.TryGetValue(parameter.ParameterType, out var cached))
                 {
-                    throw CommandRuntimeException.CouldNotResolveType(parameter.ParameterType);
+                    parameters.Add(cached);
                 }
+                // Then check for default value
+                else if (parameter.HasDefaultValue)
+                {
+                    parameters.Add(parameter.DefaultValue);
+                }
+                // Finally try DI resolution
+                else
+                {
+                    var value = resolver.Resolve(parameter.ParameterType);
+                    if (value == null)
+                    {
+                        throw CommandRuntimeException.CouldNotResolveType(parameter.ParameterType);
+                    }
 
-                parameters.Add(value);
+                    parameters.Add(value);
+                }
             }
         }
 
         // Create the settings.
-        if (!(Activator.CreateInstance(constructor.DeclaringType, parameters.ToArray()) is CommandSettings settings))
+        if (constructor.Invoke(parameters.ToArray()) is not CommandSettings settings)
         {
             throw new InvalidOperationException("Could not create settings");
         }
@@ -39,9 +55,9 @@ internal static class CommandConstructorBinder
         // Try to do property injection for parameters that wasn't injected.
         foreach (var (parameter, value) in lookup)
         {
-            if (!mapped.Contains(parameter.Id) && parameter.Property.SetMethod != null)
+            if (!mapped.Contains(parameter.Id) && parameter.Accessor.CanSet)
             {
-                parameter.Property.SetValue(settings, value);
+                parameter.Accessor.SetValue(settings, value);
             }
         }
 

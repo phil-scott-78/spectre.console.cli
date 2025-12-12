@@ -389,7 +389,7 @@ internal class CommandTreeParser
                 {
                     if (parameter is CommandOption option)
                     {
-                        if (parameter.IsFlagValue())
+                        if (parameter.IsFlagValue)
                         {
                             value = null;
                         }
@@ -411,6 +411,31 @@ internal class CommandTreeParser
         if (parameter != null && addToMappedCommandParameters)
         {
             current.Mapped.Add(new MappedCommandParameter(parameter, value));
+
+            // For Vector/Pair options, consume additional values
+            if (context.State == State.Normal &&
+                parameter.ParameterKind is ParameterKind.Vector or ParameterKind.Pair)
+            {
+                while (stream.Peek()?.TokenKind == CommandTreeToken.Kind.String)
+                {
+                    var nextToken = stream.Peek()!;
+
+                    // Stop if next token looks like an option (starts with -)
+                    if (nextToken.Value.StartsWith("-", StringComparison.Ordinal))
+                    {
+                        break;
+                    }
+
+                    // Stop if next token is a command
+                    if (current.Command.FindCommand(nextToken.Value, _caseSensitivity) != null)
+                    {
+                        break;
+                    }
+
+                    var additionalValue = stream.Consume(CommandTreeToken.Kind.String)?.Value;
+                    current.Mapped.Add(new MappedCommandParameter(parameter, additionalValue));
+                }
+            }
         }
     }
 }

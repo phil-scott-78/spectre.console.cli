@@ -1,3 +1,4 @@
+using Spectre.Console.Cli.Metadata;
 using static Spectre.Console.Cli.CommandTreeTokenizer;
 
 namespace Spectre.Console.Cli;
@@ -5,11 +6,15 @@ namespace Spectre.Console.Cli;
 internal sealed class CommandExecutor
 {
     private readonly ITypeRegistrar _registrar;
+    private readonly ICommandMetadataContext _metadataContext;
 
-    public CommandExecutor(ITypeRegistrar registrar)
+    public CommandExecutor(ITypeRegistrar registrar, ICommandMetadataContext metadataContext)
     {
         _registrar = registrar ?? throw new ArgumentNullException(nameof(registrar));
-        _registrar.Register(typeof(DefaultPairDeconstructor), typeof(DefaultPairDeconstructor));
+        _metadataContext = metadataContext ?? throw new ArgumentNullException(nameof(metadataContext));
+        _registrar.Register<DefaultPairDeconstructor>();
+        _registrar.RegisterInstance<ICommandMetadataContext>(metadataContext);
+        _registrar.RegisterInstance<ISettingsProvider>(new SettingsProvider());
     }
 
     public async Task<int> ExecuteAsync(IConfiguration configuration, IEnumerable<string> args, CancellationToken cancellationToken)
@@ -23,13 +28,15 @@ internal sealed class CommandExecutor
 
         var arguments = args.ToSafeReadOnlyList();
 
-        _registrar.RegisterInstance(typeof(IConfiguration), configuration);
-        _registrar.RegisterLazy(typeof(IAnsiConsole), () => configuration.Settings.Console.GetConsole());
+        _registrar.RegisterInstance(configuration);
+        _registrar.RegisterLazy(() => configuration.Settings.Console.GetConsole());
 
         // Create the command model.
-        var model = CommandModelBuilder.Build(configuration);
-        _registrar.RegisterInstance(typeof(CommandModel), model);
-        _registrar.RegisterDependencies(model);
+        var model = CommandModelBuilder.Build(configuration, _metadataContext);
+        _registrar.RegisterInstance(model);
+
+        // Register command and settings types with the DI container
+        _metadataContext.RegisterKnownTypes(_registrar, model);
 
         // Got at least one argument?
         var firstArgument = arguments.FirstOrDefault();
@@ -81,11 +88,11 @@ internal sealed class CommandExecutor
         parsedResult = ParseCommandLineArguments(model, configuration.Settings, arguments);
 
         // Register the arguments with the container.
-        _registrar.RegisterInstance(typeof(CommandTreeParserResult), parsedResult);
-        _registrar.RegisterInstance(typeof(IRemainingArguments), parsedResult.Remaining);
+        _registrar.RegisterInstance<CommandTreeParserResult>(parsedResult);
+        _registrar.RegisterInstance<IRemainingArguments>(parsedResult.Remaining);
 
         // Create the resolver.
-        using (var resolver = new TypeResolverAdapter(_registrar.Build()))
+        using (var resolver = new TypeResolverAdapter(_registrar.Build(), _metadataContext))
         {
             // Get the registered help provider, falling back to the default provider
             // if no custom implementations have been registered.
@@ -125,7 +132,7 @@ internal sealed class CommandExecutor
                 leaf.Command.Data);
 
             // Execute the command tree.
-            return await ExecuteAsync(leaf, parsedResult.Tree, context, resolver, configuration, cancellationToken).ConfigureAwait(false);
+            return await ExecuteAsync(leaf, parsedResult.Tree, context, resolver, configuration, _metadataContext, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -225,12 +232,20 @@ internal sealed class CommandExecutor
         CommandContext context,
         ITypeResolver resolver,
         IConfiguration configuration,
+        ICommandMetadataContext metadataContext,
         CancellationToken cancellationToken)
     {
         try
         {
             // Bind the command tree against the settings.
-            var settings = CommandBinder.Bind(tree, leaf.Command.SettingsType, resolver);
+            var settings = CommandBinder.Bind(tree, leaf.Command.SettingsType, resolver, metadataContext);
+
+            // Update the settings provider so services can access bound settings
+            if (resolver.Resolve(typeof(ISettingsProvider)) is SettingsProvider provider)
+            {
+                provider.SetSettings(settings);
+            }
+
             var interceptors =
                 ((IEnumerable<ICommandInterceptor>?)resolver.Resolve(typeof(IEnumerable<ICommandInterceptor>))
                 ?? Array.Empty<ICommandInterceptor>()).ToList();

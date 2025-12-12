@@ -1,8 +1,11 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal sealed class Configurator : IUnsafeConfigurator, IConfigurator, IConfiguration
 {
     private readonly ITypeRegistrar _registrar;
+    private readonly ICommandMetadataContext _metadataContext;
 
     public IList<ConfiguredCommand> Commands { get; }
     public CommandAppSettings Settings { get; }
@@ -11,9 +14,10 @@ internal sealed class Configurator : IUnsafeConfigurator, IConfigurator, IConfig
 
     ICommandAppSettings IConfigurator.Settings => Settings;
 
-    public Configurator(ITypeRegistrar registrar)
+    public Configurator(ITypeRegistrar registrar, ICommandMetadataContext metadataContext)
     {
         _registrar = registrar;
+        _metadataContext = metadataContext;
 
         Commands = new List<ConfiguredCommand>();
         Settings = new CommandAppSettings(registrar);
@@ -22,16 +26,14 @@ internal sealed class Configurator : IUnsafeConfigurator, IConfigurator, IConfig
 
     public IConfigurator SetHelpProvider(IHelpProvider helpProvider)
     {
-        // Register the help provider
-        _registrar.RegisterInstance(typeof(IHelpProvider), helpProvider);
+        _registrar.RegisterInstance(helpProvider);
         return this;
     }
 
-    public IConfigurator SetHelpProvider<T>()
+    public IConfigurator SetHelpProvider<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>()
         where T : IHelpProvider
     {
-        // Register the help provider
-        _registrar.Register(typeof(IHelpProvider), typeof(T));
+        _registrar.Register<IHelpProvider, T>();
         return this;
     }
 
@@ -45,14 +47,14 @@ internal sealed class Configurator : IUnsafeConfigurator, IConfigurator, IConfig
         where TDefaultCommand : class, ICommand
     {
         DefaultCommand = ConfiguredCommand.FromType<TDefaultCommand>(
-            CliConstants.DefaultCommandName, isDefaultCommand: true);
+            _metadataContext, CliConstants.DefaultCommandName, isDefaultCommand: true);
         return DefaultCommand;
     }
 
     public ICommandConfigurator AddCommand<TCommand>(string name)
         where TCommand : class, ICommand
     {
-        var command = Commands.AddAndReturn(ConfiguredCommand.FromType<TCommand>(name, isDefaultCommand: false));
+        var command = Commands.AddAndReturn(ConfiguredCommand.FromType<TCommand>(_metadataContext, name, isDefaultCommand: false));
         return new CommandConfigurator(command);
     }
 
@@ -76,11 +78,14 @@ internal sealed class Configurator : IUnsafeConfigurator, IConfigurator, IConfig
         where TSettings : CommandSettings
     {
         var command = ConfiguredCommand.FromBranch<TSettings>(name);
-        action(new Configurator<TSettings>(command, _registrar));
+        action(new Configurator<TSettings>(command, _registrar, _metadataContext));
         var added = Commands.AddAndReturn(command);
         return new BranchConfigurator(added);
     }
 
+    /// <inheritdoc/>
+    [RequiresDynamicCode("This method uses MakeGenericMethod and is not compatible with AOT compilation.")]
+    [RequiresUnreferencedCode("This method uses reflection to discover command types.")]
     ICommandConfigurator IUnsafeConfigurator.AddCommand(string name, Type command)
     {
         var method = GetType().GetMethod("AddCommand");
@@ -99,13 +104,16 @@ internal sealed class Configurator : IUnsafeConfigurator, IConfigurator, IConfig
         return result;
     }
 
+    /// <inheritdoc/>
+    [RequiresDynamicCode("This method uses MakeGenericType and Activator.CreateInstance, and is not compatible with AOT compilation.")]
+    [RequiresUnreferencedCode("This method uses reflection to discover settings types.")]
     IBranchConfigurator IUnsafeConfigurator.AddBranch(string name, Type settings, Action<IUnsafeBranchConfigurator> action)
     {
         var command = ConfiguredCommand.FromBranch(settings, name);
 
         // Create the configurator.
         var configuratorType = typeof(Configurator<>).MakeGenericType(settings);
-        if (!(Activator.CreateInstance(configuratorType, new object?[] { command, _registrar }) is IUnsafeBranchConfigurator configurator))
+        if (!(Activator.CreateInstance(configuratorType, new object?[] { command, _registrar, _metadataContext }) is IUnsafeBranchConfigurator configurator))
         {
             throw new CommandConfigurationException("Could not create configurator by reflection.");
         }

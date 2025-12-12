@@ -1,0 +1,6 @@
+﻿{
+  Output: ,
+  Settings: {
+    Qux: optional_value
+  }
+}

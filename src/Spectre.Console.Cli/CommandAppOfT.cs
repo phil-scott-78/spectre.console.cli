@@ -1,4 +1,6 @@
 using Spectre.Console.Cli.Internal.Configuration;
+using Spectre.Console.Cli.Internal.Metadata;
+using Spectre.Console.Cli.Metadata;
 
 namespace Spectre.Console.Cli;
 
@@ -6,9 +8,6 @@ namespace Spectre.Console.Cli;
 /// The entry point for a command line application with a default command.
 /// </summary>
 /// <typeparam name="TDefaultCommand">The type of the default command.</typeparam>
-#if !NETSTANDARD2_0
-[RequiresDynamicCode("Spectre.Console.Cli relies on reflection. Use during trimming and AOT compilation is not supported and may result in unexpected behaviors.")]
-#endif
 public sealed class CommandApp<TDefaultCommand> : ICommandApp
     where TDefaultCommand : class, ICommand
 {
@@ -19,9 +18,28 @@ public sealed class CommandApp<TDefaultCommand> : ICommandApp
     /// Initializes a new instance of the <see cref="CommandApp{TDefaultCommand}"/> class.
     /// </summary>
     /// <param name="registrar">The registrar.</param>
+    /// <remarks>
+    /// This constructor uses reflection-based metadata discovery and is not compatible with AOT compilation.
+    /// For AOT scenarios, use the constructor that accepts an <see cref="ICommandMetadataContext"/>.
+    /// </remarks>
+    [RequiresDynamicCode("This constructor uses reflection-based metadata. For AOT compatibility, use the constructor that accepts ICommandMetadataContext.")]
+    [RequiresUnreferencedCode("This constructor uses reflection-based metadata. For AOT compatibility, use the constructor that accepts ICommandMetadataContext.")]
     public CommandApp(ITypeRegistrar? registrar = null)
+        : this(registrar, new ReflectionMetadataContext())
     {
-        _app = new CommandApp(registrar);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandApp{TDefaultCommand}"/> class with a custom metadata context.
+    /// </summary>
+    /// <param name="registrar">The registrar.</param>
+    /// <param name="metadataContext">The metadata context for command and settings discovery.</param>
+    /// <remarks>
+    /// Use this constructor for AOT-compatible scenarios by providing a source-generated metadata context.
+    /// </remarks>
+    public CommandApp(ITypeRegistrar? registrar, ICommandMetadataContext metadataContext)
+    {
+        _app = new CommandApp(registrar, metadataContext);
         _defaultCommandConfigurator = _app.SetDefaultCommand<TDefaultCommand>();
     }
 

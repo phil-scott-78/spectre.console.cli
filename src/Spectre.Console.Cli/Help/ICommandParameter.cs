@@ -29,4 +29,14 @@ public interface ICommandParameter
     /// Gets a value indicating whether the parameter is hidden.
     /// </summary>
     bool IsHidden { get; }
+
+    /// <summary>
+    /// Gets the type converter attribute for this parameter, if specified.
+    /// </summary>
+    TypeConverterAttribute? Converter { get; }
+
+    /// <summary>
+    /// Gets the pair deconstructor attribute for this parameter, if specified.
+    /// </summary>
+    PairDeconstructorAttribute? PairDeconstructor { get; }
 }

@@ -20,7 +20,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = Record.Exception(() => app.Run(new[] { "animal", "3", "dog", "7", "--name", "Rufus" }));
+            var result = Record.Exception(() => app.Run(["animal", "3", "dog", "7", "--name", "Rufus"], TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandRuntimeException>().And(e =>
@@ -45,7 +45,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = Record.Exception(() => app.Run(new[] { "animal", "4", "dog", "7", "--name", "Tiger" }));
+            var result = Record.Exception(() => app.Run(["animal", "4", "dog", "7", "--name", "Tiger"], TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandRuntimeException>().And(e =>
@@ -69,7 +69,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = Record.Exception(() => app.Run(new[] { "animal", "4", "turtle", "--name", "Klaus" }));
+            var result = Record.Exception(() => app.Run(["animal", "4", "turtle", "--name", "Klaus"], TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandRuntimeException>().And(e =>
@@ -94,7 +94,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = Record.Exception(() => app.Run(new[] { "animal", "4", "dog", "101", "--name", "Rufus" }));
+            var result = Record.Exception(() => app.Run(["animal", "4", "dog", "101", "--name", "Rufus"], TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandRuntimeException>().And(e =>

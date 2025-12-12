@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Spectre.Console.Cli.Testing;
 
 /// <summary>
@@ -72,5 +74,43 @@ public sealed class FakeTypeRegistrar : ITypeRegistrar
     public ITypeResolver Build()
     {
         return new FakeTypeResolver(Registrations, Instances);
+    }
+
+    /// <inheritdoc/>
+    public void Register<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+        where TImplementation : TService
+    {
+        Register(typeof(TService), typeof(TImplementation));
+    }
+
+    /// <inheritdoc/>
+    public void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+        where TImplementation : class
+    {
+        Register(typeof(TImplementation), typeof(TImplementation));
+    }
+
+    /// <inheritdoc/>
+    public void RegisterInstance<TService>(TService implementation)
+        where TService : class
+    {
+        if (implementation is null)
+        {
+            throw new ArgumentNullException(nameof(implementation));
+        }
+
+        RegisterInstance(typeof(TService), implementation);
+    }
+
+    /// <inheritdoc/>
+    public void RegisterLazy<TService>(Func<TService> factory)
+        where TService : class
+    {
+        if (factory is null)
+        {
+            throw new ArgumentNullException(nameof(factory));
+        }
+
+        RegisterLazy(typeof(TService), () => factory());
     }
 }

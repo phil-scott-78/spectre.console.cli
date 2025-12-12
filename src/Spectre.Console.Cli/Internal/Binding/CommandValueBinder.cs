@@ -1,12 +1,16 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal sealed class CommandValueBinder
 {
     private readonly CommandValueLookup _lookup;
+    private readonly ICommandMetadataContext _metadataContext;
 
-    public CommandValueBinder(CommandValueLookup lookup)
+    public CommandValueBinder(CommandValueLookup lookup, ICommandMetadataContext metadataContext)
     {
         _lookup = lookup;
+        _metadataContext = metadataContext;
     }
 
     public void Bind(CommandParameter parameter, ITypeResolver resolver, object? value)
@@ -29,32 +33,23 @@ internal sealed class CommandValueBinder
 
     private object GetLookup(CommandParameter parameter, ITypeResolver resolver, object? value)
     {
-        var genericTypes = parameter.Property.PropertyType.GetGenericArguments();
+        var genericTypes = parameter.Accessor.PropertyType.GetGenericArguments();
 
         var multimap = (IMultiMap?)_lookup.GetValue(parameter);
         if (multimap == null)
         {
-            multimap = Activator.CreateInstance(typeof(MultiMap<,>).MakeGenericType(genericTypes[0], genericTypes[1])) as IMultiMap;
-            if (multimap == null)
-            {
-                throw new InvalidOperationException("Could not create multimap");
-            }
+            multimap = _metadataContext.CreateMultiMap(genericTypes[0], genericTypes[1]);
         }
 
         // Create deconstructor.
         var deconstructorType = parameter.PairDeconstructor?.Type ?? typeof(DefaultPairDeconstructor);
         if (!(resolver.Resolve(deconstructorType) is IPairDeconstructor deconstructor))
         {
-            if (!(Activator.CreateInstance(deconstructorType) is IPairDeconstructor activatedDeconstructor))
-            {
-                throw new InvalidOperationException($"Could not create pair deconstructor.");
-            }
-
-            deconstructor = activatedDeconstructor;
+            deconstructor = (IPairDeconstructor)_metadataContext.CreatePairDeconstructor(deconstructorType);
         }
 
         // Deconstruct and add to multimap.
-        var pair = deconstructor.Deconstruct(resolver, genericTypes[0], genericTypes[1], value as string);
+        var pair = deconstructor.Deconstruct(resolver, _metadataContext, genericTypes[0], genericTypes[1], value as string);
         if (pair.Key != null)
         {
             multimap.Add(pair);
@@ -74,7 +69,7 @@ internal sealed class CommandValueBinder
         var array = (Array?)_lookup.GetValue(parameter);
         Array newArray;
 
-        var elementType = parameter.Property.PropertyType.GetElementType();
+        var elementType = parameter.Accessor.PropertyType.GetElementType();
         if (elementType == null)
         {
             throw new InvalidOperationException("Could not get property type.");
@@ -99,11 +94,14 @@ internal sealed class CommandValueBinder
         var flagValue = (IFlagValue?)_lookup.GetValue(parameter);
         if (flagValue == null)
         {
-            flagValue = (IFlagValue?)Activator.CreateInstance(parameter.ParameterType);
-            if (flagValue == null)
+            // Get the underlying type from FlagValue<T>
+            var genericArgs = parameter.ParameterType.GetGenericArguments();
+            if (genericArgs.Length == 0)
             {
-                throw new InvalidOperationException("Could not create flag value.");
+                throw new InvalidOperationException("Could not determine flag value type.");
             }
+
+            flagValue = _metadataContext.CreateFlagValue(genericArgs[0]);
         }
 
         if (value != null)

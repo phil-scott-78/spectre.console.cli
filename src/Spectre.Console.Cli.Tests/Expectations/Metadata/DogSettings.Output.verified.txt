@@ -1,0 +1,10 @@
+﻿{
+  Output: ,
+  Settings: {
+    Age: 4,
+    GoodBoy: true,
+    Name: Rufus,
+    IsAlive: false,
+    Legs: 12
+  }
+}

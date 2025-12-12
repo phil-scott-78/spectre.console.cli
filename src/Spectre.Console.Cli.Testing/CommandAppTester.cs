@@ -1,3 +1,5 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli.Testing;
 
 /// <summary>
@@ -22,6 +24,12 @@ public sealed class CommandAppTester
     /// Gets or sets the settings for the <see cref="CommandAppTester"/>.
     /// </summary>
     public CommandAppTesterSettings TestSettings { get; set; }
+
+    /// <summary>
+    /// Gets or sets the metadata context to use for the CommandApp.
+    /// If not set, the default reflection-based context will be used.
+    /// </summary>
+    public ICommandMetadataContext? Context { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CommandAppTester"/> class.
@@ -143,12 +151,43 @@ public sealed class CommandAppTester
         return await RunAsync(args ?? [], Console, cancellationToken: cancellationToken);
     }
 
+#if NET9_0_OR_GREATER
+    [System.Diagnostics.CodeAnalysis.FeatureGuard(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+#endif
+    private static bool IsDynamicCodeSupported
+    {
+        get
+        {
+#if NETSTANDARD2_0
+            // netstandard2.0 doesn't have RuntimeFeature.IsDynamicCodeSupported
+            // Assume dynamic code is always supported in this case
+            return true;
+#else
+            return System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported;
+#endif
+        }
+    }
+
     private async Task<CommandAppResult> RunAsync(string[] args, TestConsole console, Action<IConfigurator>? config = null, CancellationToken cancellationToken = default)
     {
         CommandContext? context = null;
         CommandSettings? settings = null;
 
-        var app = new CommandApp(Registrar);
+        CommandApp app;
+        if (Context == null && IsDynamicCodeSupported)
+        {
+            app = new CommandApp(Registrar);
+        }
+        else if (Context != null)
+        {
+            app = new CommandApp(Registrar, Context);
+        }
+        else
+        {
+            throw new InvalidOperationException("Context must be set in AOT scenarios");
+        }
+
+
         _appConfiguration?.Invoke(app);
 
         if (_configuration != null)

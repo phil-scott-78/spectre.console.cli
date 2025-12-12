@@ -1,0 +1,8 @@
+﻿{
+  Output: ,
+  Settings: {
+    Agility: 1,
+    Name: Whiskers,
+    IsAlive: false
+  }
+}

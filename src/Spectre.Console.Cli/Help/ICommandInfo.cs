@@ -39,4 +39,14 @@ public interface ICommandInfo : ICommandContainer
     /// Gets the parent command, if any.
     /// </summary>
     ICommandInfo? Parent { get; }
+
+    /// <summary>
+    /// Gets the settings type for this command.
+    /// </summary>
+    Type SettingsType { get; }
+
+    /// <summary>
+    /// Gets the command type, or <c>null</c> if this is a branch without an executable command.
+    /// </summary>
+    Type? CommandType { get; }
 }

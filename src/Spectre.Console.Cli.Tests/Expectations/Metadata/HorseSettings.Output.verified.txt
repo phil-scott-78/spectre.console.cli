@@ -1,0 +1,9 @@
+﻿{
+  Output: ,
+  Settings: {
+    Day: Friday,
+    File: food.txt,
+    Name: Spirit,
+    IsAlive: false
+  }
+}

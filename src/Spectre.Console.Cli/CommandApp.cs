@@ -1,13 +1,12 @@
 using Spectre.Console.Cli.Internal.Configuration;
+using Spectre.Console.Cli.Internal.Metadata;
+using Spectre.Console.Cli.Metadata;
 
 namespace Spectre.Console.Cli;
 
 /// <summary>
 /// The entry point for a command line application.
 /// </summary>
-#if !NETSTANDARD2_0
-[RequiresDynamicCode("Spectre.Console.Cli relies on reflection. Use during trimming and AOT compilation is not supported and may result in unexpected behaviors.")]
-#endif
 public sealed class CommandApp : ICommandApp
 {
     private readonly Configurator _configurator;
@@ -18,12 +17,53 @@ public sealed class CommandApp : ICommandApp
     /// Initializes a new instance of the <see cref="CommandApp"/> class.
     /// </summary>
     /// <param name="registrar">The registrar.</param>
+    /// <remarks>
+    /// This constructor uses reflection-based metadata discovery and is not compatible with AOT compilation.
+    /// For AOT scenarios, use the constructor that accepts an <see cref="ICommandMetadataContext"/>.
+    /// </remarks>
+    [RequiresDynamicCode("This constructor uses reflection-based metadata. For AOT compatibility, use the constructor that accepts ICommandMetadataContext.")]
+    [RequiresUnreferencedCode("This constructor uses reflection-based metadata. For AOT compatibility, use the constructor that accepts ICommandMetadataContext.")]
     public CommandApp(ITypeRegistrar? registrar = null)
+        : this(registrar, new ReflectionMetadataContext())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandApp"/> class with a custom metadata context.
+    /// </summary>
+    /// <param name="registrar">The registrar.</param>
+    /// <param name="metadataContext">The metadata context for command and settings discovery.</param>
+    /// <remarks>
+    /// Use this constructor for AOT-compatible scenarios by providing a source-generated metadata context.
+    /// </remarks>
+    public CommandApp(ITypeRegistrar? registrar, ICommandMetadataContext metadataContext)
     {
         registrar ??= new DefaultTypeRegistrar();
 
-        _configurator = new Configurator(registrar);
-        _executor = new CommandExecutor(registrar);
+        // Register built-in command metadata (ExplainCommand.Settings, etc.)
+        BuiltInCommandMetadata.Register(registrar);
+
+        _configurator = new Configurator(registrar, metadataContext);
+        _executor = new CommandExecutor(registrar, metadataContext);
+    }
+
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandApp"/> class with a custom metadata context.
+    /// </summary>
+    /// <param name="metadataContext">The metadata context for command and settings discovery.</param>
+    /// <remarks>
+    /// Use this constructor for AOT-compatible scenarios by providing a source-generated metadata context.
+    /// </remarks>
+    public CommandApp(ICommandMetadataContext metadataContext)
+    {
+        var registrar = new DefaultTypeRegistrar();
+
+        // Register built-in command metadata (ExplainCommand.Settings, etc.)
+        BuiltInCommandMetadata.Register(registrar);
+
+        _configurator = new Configurator(registrar, metadataContext);
+        _executor = new CommandExecutor(registrar, metadataContext);
     }
 
     /// <inheritdoc/>

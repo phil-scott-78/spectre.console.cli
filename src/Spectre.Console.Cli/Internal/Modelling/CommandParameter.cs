@@ -1,3 +1,5 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal abstract class CommandParameter : ICommandParameterInfo, ICommandParameter
@@ -5,6 +7,7 @@ internal abstract class CommandParameter : ICommandParameterInfo, ICommandParame
     public Guid Id { get; }
     public Type ParameterType { get; }
     public ParameterKind ParameterKind { get; }
+    public IPropertyAccessor Accessor { get; }
     public PropertyInfo Property { get; }
     public string? Description { get; }
     public DefaultValueAttribute? DefaultValue { get; }
@@ -21,8 +24,14 @@ internal abstract class CommandParameter : ICommandParameterInfo, ICommandParame
 
     public bool IsFlag => ParameterKind == ParameterKind.Flag;
 
+    /// <summary>
+    /// Gets a value indicating whether this parameter is a FlagValue&lt;T&gt;.
+    /// This is computed once during model building to avoid runtime reflection.
+    /// </summary>
+    public bool IsFlagValue { get; }
+
     protected CommandParameter(
-        Type parameterType, ParameterKind parameterKind, PropertyInfo property,
+        Type parameterType, ParameterKind parameterKind, IPropertyAccessor accessor,
         string? description, TypeConverterAttribute? converter,
         DefaultValueAttribute? defaultValue,
         PairDeconstructorAttribute? deconstructor,
@@ -32,7 +41,8 @@ internal abstract class CommandParameter : ICommandParameterInfo, ICommandParame
         Id = Guid.NewGuid();
         ParameterType = parameterType;
         ParameterKind = parameterKind;
-        Property = property;
+        Accessor = accessor;
+        Property = accessor.PropertyInfo;
         Description = description;
         Converter = converter;
         DefaultValue = defaultValue;
@@ -41,11 +51,15 @@ internal abstract class CommandParameter : ICommandParameterInfo, ICommandParame
         Validators = new List<ParameterValidationAttribute>(validators);
         IsRequired = required;
         IsHidden = isHidden;
+
+        // Pre-compute IsFlagValue during model building to avoid runtime reflection
+        IsFlagValue = ComputeIsFlagValue(parameterType);
     }
 
-    public bool IsFlagValue()
+    private static bool ComputeIsFlagValue(Type parameterType)
     {
-        return ParameterType.GetInterfaces().Any(i => i == typeof(IFlagValue));
+        // Use IsAssignableFrom instead of GetInterfaces() to avoid IL2070 warning
+        return typeof(IFlagValue).IsAssignableFrom(parameterType);
     }
 
     public bool HaveSameBackingPropertyAs(CommandParameter other)
@@ -53,99 +67,4 @@ internal abstract class CommandParameter : ICommandParameterInfo, ICommandParame
         return CommandParameterComparer.ByBackingProperty.Equals(this, other);
     }
 
-    public void Assign(CommandSettings settings, ITypeResolver resolver, object? value)
-    {
-        // Is the property pair deconstructable?
-        // TODO: This needs to be better defined
-        if (Property.PropertyType.IsPairDeconstructable() && WantRawValue)
-        {
-            var genericTypes = Property.PropertyType.GetGenericArguments();
-
-            var multimap = (IMultiMap?)Property.GetValue(settings);
-            if (multimap == null)
-            {
-                multimap = Activator.CreateInstance(typeof(MultiMap<,>).MakeGenericType(genericTypes[0], genericTypes[1])) as IMultiMap;
-                if (multimap == null)
-                {
-                    throw new InvalidOperationException("Could not create multimap");
-                }
-            }
-
-            // Create deconstructor.
-            var deconstructorType = PairDeconstructor?.Type ?? typeof(DefaultPairDeconstructor);
-            if (!(resolver.Resolve(deconstructorType) is IPairDeconstructor deconstructor))
-            {
-                if (!(Activator.CreateInstance(deconstructorType) is IPairDeconstructor activatedDeconstructor))
-                {
-                    throw new InvalidOperationException($"Could not create pair deconstructor.");
-                }
-
-                deconstructor = activatedDeconstructor;
-            }
-
-            // Deconstruct and add to multimap.
-            var pair = deconstructor.Deconstruct(resolver, genericTypes[0], genericTypes[1], value as string);
-            if (pair.Key != null)
-            {
-                multimap.Add(pair);
-            }
-
-            value = multimap;
-        }
-        else if (Property.PropertyType.IsArray)
-        {
-            // Add a new item to the array
-            var array = (Array?)Property.GetValue(settings);
-            Array newArray;
-
-            var elementType = Property.PropertyType.GetElementType();
-            if (elementType == null)
-            {
-                throw new InvalidOperationException("Could not get property type.");
-            }
-
-            if (array == null)
-            {
-                newArray = Array.CreateInstance(elementType, 1);
-            }
-            else
-            {
-                newArray = Array.CreateInstance(elementType, array.Length + 1);
-                array.CopyTo(newArray, 0);
-            }
-
-            newArray.SetValue(value, newArray.Length - 1);
-            value = newArray;
-        }
-        else if (IsFlagValue())
-        {
-            var flagValue = (IFlagValue?)Property.GetValue(settings);
-            if (flagValue == null)
-            {
-                flagValue = (IFlagValue?)Activator.CreateInstance(ParameterType);
-                if (flagValue == null)
-                {
-                    throw new InvalidOperationException("Could not create flag value.");
-                }
-            }
-
-            if (value != null)
-            {
-                // Null means set, but not with a valid value.
-                flagValue.Value = value;
-            }
-
-            // If the parameter was mapped, then it's set.
-            flagValue.IsSet = true;
-
-            value = flagValue;
-        }
-
-        Property.SetValue(settings, value);
-    }
-
-    public object? Get(CommandSettings settings)
-    {
-        return Property.GetValue(settings);
-    }
 }

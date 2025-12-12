@@ -1,11 +1,17 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
+/// <summary>
+/// Default implementation of <see cref="IPairDeconstructor"/> for parsing key=value pairs.
+/// </summary>
 [SuppressMessage("Performance", "CA1812: Avoid uninstantiated internal classes")]
-internal sealed class DefaultPairDeconstructor : IPairDeconstructor
+public sealed class DefaultPairDeconstructor : IPairDeconstructor
 {
     /// <inheritdoc/>
     (object? Key, object? Value) IPairDeconstructor.Deconstruct(
         ITypeResolver resolver,
+        ICommandMetadataContext metadataContext,
         Type keyType,
         Type valueType,
         string? value)
@@ -30,7 +36,7 @@ internal sealed class DefaultPairDeconstructor : IPairDeconstructor
             {
                 // Get the string variant of a default instance.
                 // Should not get null here, but compiler doesn't know that.
-                stringValue = Activator.CreateInstance(valueType)?.ToString() ?? string.Empty;
+                stringValue = metadataContext.CreateDefaultValue(valueType)?.ToString() ?? string.Empty;
             }
             else
             {
@@ -40,15 +46,15 @@ internal sealed class DefaultPairDeconstructor : IPairDeconstructor
             }
         }
 
-        return (Parse(stringkey, keyType),
-            Parse(stringValue, valueType));
+        return (Parse(metadataContext, stringkey, keyType),
+            Parse(metadataContext, stringValue, valueType));
     }
 
-    private static object? Parse(string value, Type targetType)
+    private static object? Parse(ICommandMetadataContext metadataContext, string value, Type targetType)
     {
         try
         {
-            var converter = GetConverter(targetType);
+            var converter = metadataContext.GetTypeConverter(targetType);
             return converter.ConvertFrom(value);
         }
         catch
@@ -56,16 +62,5 @@ internal sealed class DefaultPairDeconstructor : IPairDeconstructor
             // Can't convert something. Just give up and tell the user.
             throw CommandParseException.ValueIsNotInValidFormat(value);
         }
-    }
-
-    private static TypeConverter GetConverter(Type type)
-    {
-        var converter = TypeDescriptor.GetConverter(type);
-        if (converter != null)
-        {
-            return converter;
-        }
-
-        throw new CommandConfigurationException($"Could find a type converter for '{type.FullName}'.");
     }
 }

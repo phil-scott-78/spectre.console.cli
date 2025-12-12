@@ -1,3 +1,5 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 internal sealed class CommandOption : CommandParameter, ICommandOption
@@ -9,12 +11,12 @@ internal sealed class CommandOption : CommandParameter, ICommandOption
     public bool IsShadowed { get; set; }
 
     public CommandOption(
-        Type parameterType, ParameterKind parameterKind, PropertyInfo property, string? description,
+        Type parameterType, ParameterKind parameterKind, IPropertyAccessor accessor, string? description,
         TypeConverterAttribute? converter, PairDeconstructorAttribute? deconstructor,
         CommandOptionAttribute optionAttribute, ParameterValueProviderAttribute? valueProvider,
         IEnumerable<ParameterValidationAttribute> validators,
         DefaultValueAttribute? defaultValue, bool valueIsOptional)
-        : base(parameterType, parameterKind, property, description, converter,
+        : base(parameterType, parameterKind, accessor, description, converter,
             defaultValue, deconstructor, valueProvider, validators,
             optionAttribute.IsRequired, optionAttribute.IsHidden)
     {

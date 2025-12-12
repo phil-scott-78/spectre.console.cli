@@ -1,0 +1,10 @@
+﻿{
+  Output: ,
+  Settings: {
+    Foo: [
+      first,
+      second,
+      third
+    ]
+  }
+}

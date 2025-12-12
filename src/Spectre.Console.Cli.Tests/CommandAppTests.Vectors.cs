@@ -16,7 +16,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = Record.Exception(() => app.Run(new[] { "multi", "a", "b", "c" }));
+            var result = Record.Exception(() => app.Run(new[] { "multi", "a", "b", "c" }, TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandConfigurationException>().And(ex =>
@@ -37,7 +37,7 @@ public sealed partial class CommandAppTests
             });
 
             // When
-            var result = Record.Exception(() => app.Run(new[] { "multi", "a", "b", "c" }));
+            var result = Record.Exception(() => app.Run(new[] { "multi", "a", "b", "c" }, TestContext.Current.CancellationToken));
 
             // Then
             result.ShouldBeOfType<CommandConfigurationException>().And(ex =>

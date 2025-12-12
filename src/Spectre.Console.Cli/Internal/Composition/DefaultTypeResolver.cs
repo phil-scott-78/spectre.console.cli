@@ -1,5 +1,7 @@
 namespace Spectre.Console.Cli;
 
+[RequiresDynamicCode("DefaultTypeResolver uses reflection for array creation. Use a custom ITypeResolver in AOT scenarios.")]
+[RequiresUnreferencedCode("DefaultTypeResolver uses reflection. Use a custom ITypeResolver in AOT scenarios.")]
 internal sealed class DefaultTypeResolver : IDisposable, ITypeResolver
 {
     public ComponentRegistry Registry { get; } = new();

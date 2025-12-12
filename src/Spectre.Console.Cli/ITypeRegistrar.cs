@@ -32,4 +32,37 @@ public interface ITypeRegistrar
     /// </summary>
     /// <returns>A type resolver.</returns>
     ITypeResolver Build();
+
+    /// <summary>
+    /// Registers the specified implementation type for the service type.
+    /// This overload is AOT-safe as it preserves constructor metadata through DAM attributes.
+    /// </summary>
+    /// <typeparam name="TService">The service type.</typeparam>
+    /// <typeparam name="TImplementation">The implementation type.</typeparam>
+    void Register<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+        where TImplementation : TService;
+
+    /// <summary>
+    /// Registers the specified type as both service and implementation.
+    /// This overload is AOT-safe as it preserves constructor metadata through DAM attributes.
+    /// </summary>
+    /// <typeparam name="TImplementation">The type to register.</typeparam>
+    void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+        where TImplementation : class;
+
+    /// <summary>
+    /// Registers the specified instance for the service type.
+    /// </summary>
+    /// <typeparam name="TService">The service type.</typeparam>
+    /// <param name="implementation">The instance to register.</param>
+    void RegisterInstance<TService>(TService implementation)
+        where TService : class;
+
+    /// <summary>
+    /// Registers a lazy factory for the specified service type.
+    /// </summary>
+    /// <typeparam name="TService">The service type.</typeparam>
+    /// <param name="factory">The factory that creates the implementation.</param>
+    void RegisterLazy<TService>(Func<TService> factory)
+        where TService : class;
 }

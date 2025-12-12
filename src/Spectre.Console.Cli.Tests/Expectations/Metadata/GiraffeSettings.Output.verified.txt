@@ -1,0 +1,9 @@
+﻿{
+  Output: ,
+  Settings: {
+    Length: 6,
+    Name: Gerry,
+    IsAlive: false,
+    Legs: 4
+  }
+}

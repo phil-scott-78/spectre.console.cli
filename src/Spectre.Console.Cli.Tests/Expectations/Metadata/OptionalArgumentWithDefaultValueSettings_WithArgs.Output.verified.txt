@@ -1,0 +1,6 @@
+﻿{
+  Output: Custom Greeting,
+  Settings: {
+    Greeting: Custom Greeting
+  }
+}

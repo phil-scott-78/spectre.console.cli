@@ -1,3 +1,5 @@
+using Spectre.Console.Cli.Metadata;
+
 namespace Spectre.Console.Cli;
 
 /// <summary>
@@ -15,7 +17,12 @@ public abstract class PairDeconstructor<TKey, TValue> : IPairDeconstructor
     protected abstract (TKey Key, TValue Value) Deconstruct(string? value);
 
     /// <inheritdoc/>
-    (object? Key, object? Value) IPairDeconstructor.Deconstruct(ITypeResolver resolver, Type keyType, Type valueType, string? value)
+    (object? Key, object? Value) IPairDeconstructor.Deconstruct(
+        ITypeResolver resolver,
+        ICommandMetadataContext metadataContext,
+        Type keyType,
+        Type valueType,
+        string? value)
     {
         if (!keyType.IsAssignableFrom(typeof(TKey)) || !valueType.IsAssignableFrom(typeof(TValue)))
         {

@@ -59,7 +59,7 @@ public sealed partial class CommandAppTests
             app.Configure(config => config.SetInterceptor(interceptor));
 
             // When
-            app.Run(Array.Empty<string>());
+            app.Run(Array.Empty<string>(), TestContext.Current.CancellationToken);
 
             // Then
             count.ShouldBe(1); // to be sure
@@ -80,7 +80,7 @@ public sealed partial class CommandAppTests
             app.Configure(config => config.SetInterceptor(interceptor));
 
             // When
-            var actual = app.Run(Array.Empty<string>());
+            var actual = app.Run(Array.Empty<string>(), TestContext.Current.CancellationToken);
 
             // Then
             count.ShouldBe(1);

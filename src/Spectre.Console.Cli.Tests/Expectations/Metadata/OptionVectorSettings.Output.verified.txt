@@ -1,0 +1,13 @@
+﻿{
+  Output: ,
+  Settings: {
+    Foo: [
+      a,
+      b
+    ],
+    Bar: [
+      1,
+      2
+    ]
+  }
+}

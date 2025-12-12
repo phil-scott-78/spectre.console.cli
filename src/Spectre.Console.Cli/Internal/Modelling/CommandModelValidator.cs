@@ -97,7 +97,7 @@ internal static class CommandModelValidator
         foreach (var option in options)
         {
             // Pair deconstructable?
-            if (option.Property.PropertyType.IsPairDeconstructable())
+            if (option.Accessor.PropertyType.IsPairDeconstructable())
             {
                 if (option is { PairDeconstructor: not null, Converter: not null })
                 {
@@ -110,7 +110,7 @@ internal static class CommandModelValidator
             }
 
             // Optional options that are not flags?
-            if (option.ParameterKind == ParameterKind.FlagWithValue && !option.IsFlagValue())
+            if (option.ParameterKind == ParameterKind.FlagWithValue && !option.IsFlagValue)
             {
                 throw CommandConfigurationException.OptionalOptionValueMustBeFlagWithValue(option);
             }

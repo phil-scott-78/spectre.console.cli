@@ -68,4 +68,20 @@ public class CommandRuntimeException : CommandAppException
     {
         return new CommandRuntimeException($"Could not get settings type for command of type '{commandType.FullName}'.");
     }
+
+    internal static CommandRuntimeException AmbiguousConstructors(Type settingsType, IEnumerable<Metadata.IConstructorMetadata> constructors)
+    {
+        var ctorDescriptions = constructors.Select(c =>
+        {
+            var paramList = string.Join(", ", c.Parameters.Select(p => $"{p.ParameterType.Name} {p.Name}"));
+            return $"  - {settingsType.Name}({paramList})";
+        });
+
+        var message = $"Ambiguous constructor selection for settings type '{settingsType.FullName}'. " +
+                      $"Multiple constructors have the same number of satisfiable parameters from command-line values:\n" +
+                      string.Join("\n", ctorDescriptions) + "\n" +
+                      "Consider removing one of the constructors or making the parameter names distinct.";
+
+        return new CommandRuntimeException(message);
+    }
 }

@@ -1,0 +1,7 @@
+﻿{
+  Output: ,
+  Settings: {
+    Corgi: corgi_value,
+    Qux: qux_value
+  }
+}
