@@ -87,27 +87,6 @@ public sealed partial class CommandOptionAttributeTests
         }
     }
 
-    public sealed class InvalidCharacterInOptionName
-    {
-        public sealed class Settings : CommandSettings
-        {
-            [CommandOption("--f$oo")]
-            public string Foo { get; set; } = null!;
-        }
-
-        [Fact]
-        [Expectation("InvalidCharacterInOptionName")]
-        public Task Should_Return_Correct_Text()
-        {
-            // Given, When
-            var result = Fixture.Run<Settings>();
-
-            // Then
-            result.Exception.Message.ShouldBe("Encountered invalid character '$' in option name.");
-            return Verifier.Verify(result.Output);
-        }
-    }
-
     public sealed class LongOptionMustHaveMoreThanOneCharacter
     {
         public sealed class Settings : CommandSettings
@@ -167,27 +146,6 @@ public sealed partial class CommandOptionAttributeTests
 
             // Then
             result.Exception.Message.ShouldBe("Multiple option values are not supported.");
-            return Verifier.Verify(result.Output);
-        }
-    }
-
-    public sealed class InvalidCharacterInValueName
-    {
-        public sealed class Settings : CommandSettings
-        {
-            [CommandOption("-f|--foo <F$OO>")]
-            public string Foo { get; set; } = null!;
-        }
-
-        [Fact]
-        [Expectation("InvalidCharacterInValueName")]
-        public Task Should_Return_Correct_Text()
-        {
-            // Given, When
-            var result = Fixture.Run<Settings>();
-
-            // Then
-            result.Exception.Message.ShouldBe("Encountered invalid character '$' in value name.");
             return Verifier.Verify(result.Output);
         }
     }

@@ -77,22 +77,6 @@ public sealed class CommandTemplateException : CommandConfigurationException
             "Invalid option name.");
     }
 
-    internal static CommandTemplateException InvalidCharacterInOptionName(string template, TemplateToken token, char character)
-    {
-        // Rewrite the token to point to the invalid character instead of the whole value.
-        var position = (token.TokenKind == TemplateToken.Kind.ShortName
-            ? token.Position + 1
-            : token.Position + 2) + token.Value.OrdinalIndexOf(character);
-
-        token = new TemplateToken(
-            token.TokenKind, position,
-            token.Value, character.ToString(CultureInfo.InvariantCulture));
-
-        return CommandLineTemplateExceptionFactory.Create(template, token,
-            $"Encountered invalid character '{character}' in option name.",
-            "Invalid character.");
-    }
-
     internal static CommandTemplateException LongOptionMustHaveMoreThanOneCharacter(string template, TemplateToken token)
     {
         // Rewrite the token to point to the option name instead of the whole option.
@@ -125,19 +109,6 @@ public sealed class CommandTemplateException : CommandConfigurationException
         return CommandLineTemplateExceptionFactory.Create(template, token,
             "Multiple option values are not supported.",
             "Too many option values.");
-    }
-
-    internal static CommandTemplateException InvalidCharacterInValueName(string template, TemplateToken token, char character)
-    {
-        // Rewrite the token to point to the invalid character instead of the whole value.
-        token = new TemplateToken(
-            token.TokenKind,
-            token.Position + 1 + token.Value.OrdinalIndexOf(character),
-            token.Value, character.ToString(CultureInfo.InvariantCulture));
-
-        return CommandLineTemplateExceptionFactory.Create(template, token,
-            $"Encountered invalid character '{character}' in value name.",
-            "Invalid character.");
     }
 
     internal static CommandTemplateException MissingLongAndShortName(string template, TemplateToken? token)

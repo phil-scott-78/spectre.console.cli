@@ -77,14 +77,6 @@ internal static class TemplateParser
                 {
                     throw CommandTemplateException.OptionNamesCannotStartWithDigit(template, token);
                 }
-
-                foreach (var character in token.Value)
-                {
-                    if (!char.IsLetterOrDigit(character) && character != '-' && character != '_' && character != '?')
-                    {
-                        throw CommandTemplateException.InvalidCharacterInOptionName(template, token, character);
-                    }
-                }
             }
 
             if (token.TokenKind == TemplateToken.Kind.LongName)
@@ -113,15 +105,6 @@ internal static class TemplateParser
                 if (!string.IsNullOrWhiteSpace(result.Value))
                 {
                     throw CommandTemplateException.MultipleOptionValuesAreNotSupported(template, token);
-                }
-
-                foreach (var character in token.Value)
-                {
-                    if (!char.IsLetterOrDigit(character) &&
-                        character != '=' && character != '-' && character != '_' && character != '|')
-                    {
-                        throw CommandTemplateException.InvalidCharacterInValueName(template, token, character);
-                    }
                 }
 
                 result.Value = token.Value.ToUpperInvariant();
